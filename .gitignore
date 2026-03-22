@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+dist/
+
+# Vercel
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude / AI tooling
+.claude/
+SKILLS/
+
+# Documentation (not needed for deployment)
+*.md
+plan/
+
+# Tasks
+tasks.md
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

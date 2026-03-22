@@ -1,0 +1,103 @@
+{
+  "id": "cs_bs",
+  "name": "B.S. Computer Science",
+  "department": "CECS",
+  "catalog_year": "2025-2026",
+  "total_units_required": 120,
+  "requirements": [
+    {
+      "name": "Lower Division Core",
+      "type": "all",
+      "courses": [
+        "CECS 105", "CECS 174", "CECS 225", "CECS 228", "CECS 229",
+        "CECS 274", "CECS 277", "ENGR 101", "ENGR 102",
+        "MATH 122", "MATH 123"
+      ]
+    },
+    {
+      "name": "Physical Science",
+      "type": "choose",
+      "count": 1,
+      "courses": ["PHYS 151", "CHEM 111A"]
+    },
+    {
+      "name": "Life Science",
+      "type": "choose",
+      "count": 1,
+      "courses": ["BIOL 200", "BIOL 205", "BIOL 207"]
+    },
+    {
+      "name": "Upper Division Core",
+      "type": "all",
+      "courses": [
+        "CECS 325", "CECS 326", "CECS 327", "CECS 328", "CECS 329",
+        "CECS 341", "CECS 342", "CECS 343", "CECS 378",
+        "ENGR 350", "CECS 491A", "CECS 491B"
+      ]
+    },
+    {
+      "name": "ENGR Communication",
+      "type": "choose",
+      "count": 1,
+      "courses": ["ENGR 361", "ENGR 390"]
+    },
+    {
+      "name": "Probability & Statistics",
+      "type": "choose",
+      "count": 1,
+      "courses": ["CECS 381", "E E 381"]
+    },
+    {
+      "name": "Focus Area (12 units)",
+      "type": "choose",
+      "count": 4,
+      "courses": [
+        "CECS 323", "CECS 443", "CECS 448", "CECS 453", "CECS 470", "CECS 475",
+        "CECS 478", "CECS 303", "CECS 456", "CECS 457", "CECS 474", "CECS 479",
+        "CECS 427", "CECS 429", "CECS 450", "CECS 451", "CECS 458"
+      ]
+    },
+    {
+      "name": "General Electives (6 units)",
+      "type": "choose",
+      "count": 2,
+      "courses": [
+        "CECS 303", "CECS 323", "CECS 406", "CECS 419", "CECS 427", "CECS 428",
+        "CECS 429", "CECS 443", "CECS 444", "CECS 448", "CECS 449", "CECS 450",
+        "CECS 451", "CECS 453", "CECS 455", "CECS 456", "CECS 457", "CECS 458",
+        "CECS 461", "CECS 470", "CECS 474", "CECS 475", "CECS 478", "CECS 479",
+        "CECS 480", "CECS 495", "CECS 497", "MATH 323"
+      ]
+    },
+    {
+      "name": "GE: Area A — Communication",
+      "type": "all",
+      "courses": ["GE-A1", "GE-A2", "GE-A3"]
+    },
+    {
+      "name": "GE: Area B — Science & Math",
+      "type": "all",
+      "courses": ["GE-B1", "GE-B2", "GE-B3", "GE-B5"]
+    },
+    {
+      "name": "GE: Area C — Arts & Humanities",
+      "type": "all",
+      "courses": ["GE-C1", "GE-C2", "GE-C3"]
+    },
+    {
+      "name": "GE: Area D — Social Sciences",
+      "type": "all",
+      "courses": ["GE-D1", "GE-D2", "GE-D3", "GE-D4"]
+    },
+    {
+      "name": "GE: Area E & F",
+      "type": "all",
+      "courses": ["GE-E", "GE-F"]
+    },
+    {
+      "name": "GE: Upper Division",
+      "type": "all",
+      "courses": ["GE-UD-B", "GE-UD-C", "GE-UD-D"]
+    }
+  ]
+}

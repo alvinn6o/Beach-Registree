@@ -1,0 +1,26 @@
+[
+  {
+    "id": "software_dev",
+    "name": "Software Development",
+    "description": "Full-stack engineering, mobile, web, and software engineering.",
+    "color": "#3b82f6",
+    "required": ["CECS 323"],
+    "electives": ["CECS 443", "CECS 448", "CECS 453", "CECS 470", "CECS 475"]
+  },
+  {
+    "id": "cybersecurity",
+    "name": "Cybersecurity",
+    "description": "Security fundamentals, cryptography, privacy, and network defense.",
+    "color": "#f97316",
+    "required": ["CECS 478"],
+    "electives": ["CECS 303", "CECS 456", "CECS 457", "CECS 474", "CECS 479", "I S 360"]
+  },
+  {
+    "id": "ml_ai",
+    "name": "Machine Learning & AI",
+    "description": "Artificial intelligence, machine learning, and data-driven systems.",
+    "color": "#a855f7",
+    "required": ["CECS 456"],
+    "electives": ["CECS 427", "CECS 429", "CECS 450", "CECS 451", "CECS 457", "CECS 458"]
+  }
+]

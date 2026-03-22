@@ -1,0 +1,41 @@
+[
+  {
+    "id": "MATH 122",
+    "name": "Calculus I",
+    "units": 4,
+    "description": "Limits, derivatives, integrals. Foundation for all upper-division STEM.",
+    "prerequisites": [],
+    "prerequisites_or": [],
+    "corequisites": [],
+    "semester_offered": "F/S",
+    "category": "math",
+    "min_grade": "C",
+    "notes": ""
+  },
+  {
+    "id": "MATH 123",
+    "name": "Calculus II",
+    "units": 4,
+    "description": "Integration techniques, sequences, series, polar coordinates.",
+    "prerequisites": ["MATH 122"],
+    "prerequisites_or": [],
+    "corequisites": [],
+    "semester_offered": "F/S",
+    "category": "math",
+    "min_grade": "C",
+    "notes": ""
+  },
+  {
+    "id": "MATH 323",
+    "name": "Introduction to Numerical Analysis",
+    "units": 4,
+    "description": "Numerical solution of nonlinear equations, systems of linear equations, and ordinary differential equations. Interpolating polynomials, numerical differentiation, and numerical integration. Computer implementation.",
+    "prerequisites": ["MATH 123"],
+    "prerequisites_or": [],
+    "corequisites": [],
+    "semester_offered": "F/S",
+    "category": "elective",
+    "min_grade": "C",
+    "notes": "General elective option for CS B.S. Catalog prereqs: MATH 224 and a programming course"
+  }
+]

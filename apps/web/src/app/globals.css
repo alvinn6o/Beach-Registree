@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+  --font-display: 'Instrument Serif', serif;
+  --font-hero: 'Cormorant Garamond', 'Georgia', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--font-body);
+  background: #0a0c12;
+  color: #d4d4d8;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+.glass {
+  background: rgba(15, 17, 23, 0.7);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+}
+
+/* ── Base animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fadeUp 0.5s ease-out both;
+}
+
+/* ── Tree-graph growth animations ── */
+@keyframes growTrunk {
+  from { stroke-dashoffset: 500; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes growBranch {
+  from { stroke-dashoffset: 300; opacity: 0; }
+  15% { opacity: 1; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+
+@keyframes bloomNode {
+  0% { r: 0; opacity: 0; }
+  60% { r: 10; opacity: 0.7; }
+  100% { r: 7; opacity: 1; }
+}
+
+@keyframes bloomNodeLg {
+  0% { r: 0; opacity: 0; }
+  60% { r: 14; opacity: 0.7; }
+  100% { r: 10; opacity: 1; }
+}
+
+@keyframes nodeGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(52, 211, 153, 0.3)); }
+  50% { filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.6)); }
+}
+
+@keyframes leafDrift {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.15; }
+  50% { transform: translateY(-8px) rotate(5deg); opacity: 0.3; }
+}
+
+@keyframes fadeInSlow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scrollHint {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(6px); opacity: 0.8; }
+}
+
+@keyframes titleReveal {
+  0% { opacity: 0; transform: translateY(20px) scale(0.96); letter-spacing: 0.15em; }
+  100% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: 0.02em; }
+}
+
+@keyframes taglineReveal {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes buttonReveal {
+  0% { opacity: 0; transform: translateY(15px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes separatorSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.tree-trunk {
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: growTrunk 2s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+}
+
+.tree-branch {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  opacity: 0;
+}
+
+.tree-branch-1 { animation: growBranch 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1.4s forwards; }
+.tree-branch-2 { animation: growBranch 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1.6s forwards; }
+.tree-branch-3 { animation: growBranch 1s cubic-bezier(0.4, 0, 0.2, 1) 1.8s forwards; }
+.tree-branch-4 { animation: growBranch 1s cubic-bezier(0.4, 0, 0.2, 1) 2.0s forwards; }
+.tree-branch-5 { animation: growBranch 0.8s cubic-bezier(0.4, 0, 0.2, 1) 2.1s forwards; }
+.tree-branch-6 { animation: growBranch 0.8s cubic-bezier(0.4, 0, 0.2, 1) 2.2s forwards; }
+.tree-branch-7 { animation: growBranch 0.8s cubic-bezier(0.4, 0, 0.2, 1) 2.3s forwards; }
+.tree-branch-8 { animation: growBranch 0.8s cubic-bezier(0.4, 0, 0.2, 1) 2.4s forwards; }
+
+.tree-node {
+  opacity: 0;
+  animation: bloomNode 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.tree-node-lg {
+  opacity: 0;
+  animation: bloomNodeLg 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.tree-node-1 { animation-delay: 2.2s; }
+.tree-node-2 { animation-delay: 2.4s; }
+.tree-node-3 { animation-delay: 2.5s; }
+.tree-node-4 { animation-delay: 2.6s; }
+.tree-node-5 { animation-delay: 2.7s; }
+.tree-node-6 { animation-delay: 2.8s; }
+.tree-node-7 { animation-delay: 2.9s; }
+.tree-node-8 { animation-delay: 3.0s; }
+.tree-node-9 { animation-delay: 3.1s; }
+.tree-node-10 { animation-delay: 3.2s; }
+.tree-node-11 { animation-delay: 3.3s; }
+
+.tree-node-glow {
+  animation: nodeGlow 3s ease-in-out infinite;
+}
+
+.tree-leaf {
+  animation: leafDrift 4s ease-in-out infinite;
+}
+
+/* ── Hero title ── */
+.hero-title {
+  font-family: var(--font-hero);
+  animation: titleReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+}
+
+.hero-tagline {
+  animation: taglineReveal 0.8s ease-out 1.4s both;
+}
+
+.hero-buttons {
+  animation: buttonReveal 0.8s ease-out 1.8s both;
+}
+
+.scroll-hint {
+  animation: scrollHint 2s ease-in-out infinite;
+  animation-delay: 3s;
+  opacity: 0;
+  animation-fill-mode: backwards;
+}
+
+.separator-star {
+  animation: separatorSpin 12s linear infinite;
+  display: inline-block;
+}
+
+/* ── Range inputs ── */
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: #27272a;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #18181b;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+}
+input[type="range"].accent-blue-500::-webkit-slider-thumb {
+  background: #3b82f6;
+}
+input[type="range"].accent-amber-500::-webkit-slider-thumb {
+  background: #f59e0b;
+}
