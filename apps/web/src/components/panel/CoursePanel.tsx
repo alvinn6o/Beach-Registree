@@ -31,15 +31,20 @@ export default function CoursePanel({ courseId, onClose }: CoursePanelProps) {
   const isElective = course.category === "elective";
   const isInElectives = selectedElectives.includes(courseId);
 
-  const unlocks = allCourses.filter(
+  // Courses that directly list this course as a prerequisite (AND or OR)
+  const requiredFor = allCourses.filter(
     (c) =>
-      c.prerequisites.includes(courseId) &&
-      c.prerequisites.every((p) => p === courseId || completed.has(p))
+      c.prerequisites.includes(courseId) ||
+      c.prerequisites_or.some((group) => group.includes(courseId))
   );
 
   const prereqCourses = course.prerequisites
     .map((id) => getCourse(id))
     .filter(Boolean);
+
+  const prereqOrCourses = course.prerequisites_or
+    .map((group) => group.map((id) => getCourse(id)).filter(Boolean))
+    .filter((group) => group.length > 0);
 
   const semesterLabel =
     course.semester_offered === "F/S"
@@ -122,7 +127,7 @@ export default function CoursePanel({ courseId, onClose }: CoursePanelProps) {
       </div>
 
       {/* Prerequisites */}
-      {prereqCourses.length > 0 && (
+      {(prereqCourses.length > 0 || prereqOrCourses.length > 0) && (
         <div className="p-5 border-b border-beach-border">
           <h3 className="text-[10px] font-mono text-zinc-600 mb-2.5 uppercase tracking-widest">Prerequisites</h3>
           <div className="space-y-1.5">
@@ -139,22 +144,49 @@ export default function CoursePanel({ courseId, onClose }: CoursePanelProps) {
                 </div>
               );
             })}
+            {prereqOrCourses.length > 0 && (
+              <div className="mt-2">
+                <span className="text-[9px] font-mono text-zinc-600 uppercase">+ one of:</span>
+                {prereqOrCourses.map((group, gi) => (
+                  <div key={gi} className="flex items-center gap-1.5 mt-1 flex-wrap">
+                    {group.map((pc, pi) => {
+                      if (!pc) return null;
+                      const pStatus = getStatusFn(pc.id, completed);
+                      return (
+                        <span key={pc.id} className="flex items-center gap-1 text-xs">
+                          {pi > 0 && <span className="text-[9px] text-zinc-700 font-mono">or</span>}
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            pStatus === "completed" ? "bg-emerald-500" : pStatus === "available" ? "bg-blue-500" : "bg-zinc-700"
+                          }`} />
+                          <span className="font-mono text-zinc-400">{pc.id}</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Unlocks */}
-      {unlocks.length > 0 && (
+      {/* Required For — courses that need this as a prerequisite */}
+      {requiredFor.length > 0 && (
         <div className="p-5 border-b border-beach-border">
-          <h3 className="text-[10px] font-mono text-zinc-600 mb-2.5 uppercase tracking-widest">Unlocks</h3>
+          <h3 className="text-[10px] font-mono text-zinc-600 mb-2.5 uppercase tracking-widest">Required For</h3>
           <div className="space-y-1.5">
-            {unlocks.map((uc) => (
-              <div key={uc.id} className="flex items-center gap-2 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                <span className="font-mono text-zinc-400">{uc.id}</span>
-                <span className="text-zinc-600 truncate">{uc.name}</span>
-              </div>
-            ))}
+            {requiredFor.map((uc) => {
+              const uStatus = getStatusFn(uc.id, completed);
+              return (
+                <div key={uc.id} className="flex items-center gap-2 text-xs">
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    uStatus === "completed" ? "bg-emerald-500" : uStatus === "available" ? "bg-amber-500" : "bg-zinc-700"
+                  }`} />
+                  <span className="font-mono text-zinc-400">{uc.id}</span>
+                  <span className="text-zinc-600 truncate">{uc.name}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

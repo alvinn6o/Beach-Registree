@@ -30,6 +30,7 @@ export default function CourseCard({
   const [showTooltip, setShowTooltip] = useState(false);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const getCourse = useCourseStore((s) => s.getCourse);
+  const allCourses = useCourseStore((s) => s.allCourses);
   const removeCourse = usePlannerStore((s) => s.removeCourse);
 
   const style = {
@@ -44,6 +45,20 @@ export default function CourseCard({
       const c = getCourse(id);
       return c ? `${c.id} — ${c.name}` : id;
     });
+
+  const prereqOrLabels = course.prerequisites_or
+    .map((group) => group.map((id) => {
+      const c = getCourse(id);
+      return c ? c.id : id;
+    }).join(" or "))
+    .filter((s) => s.length > 0);
+
+  // Courses that list this course as a prerequisite
+  const requiredForCourses = allCourses.filter(
+    (c) =>
+      c.prerequisites.includes(course.id) ||
+      c.prerequisites_or.some((group) => group.includes(course.id))
+  ).map((c) => `${c.id} — ${c.name}`);
 
   const semesterLabel =
     course.semester_offered === "F/S"
@@ -131,7 +146,7 @@ export default function CourseCard({
             </p>
           )}
 
-          {prereqCourses.length > 0 && (
+          {(prereqCourses.length > 0 || prereqOrLabels.length > 0) && (
             <div>
               <p className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mb-1">Prerequisites</p>
               <div className="space-y-0.5">
@@ -141,12 +156,35 @@ export default function CourseCard({
                     {label}
                   </p>
                 ))}
+                {prereqOrLabels.map((label, i) => (
+                  <p key={`or-${i}`} className="text-[10px] text-zinc-400 flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-zinc-600 flex-shrink-0" />
+                    <span className="text-zinc-600">+</span> {label}
+                  </p>
+                ))}
               </div>
             </div>
           )}
 
-          {prereqCourses.length === 0 && (
+          {prereqCourses.length === 0 && prereqOrLabels.length === 0 && (
             <p className="text-[9px] text-zinc-600 font-mono">No prerequisites</p>
+          )}
+
+          {requiredForCourses.length > 0 && (
+            <div className="mt-2">
+              <p className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mb-1">Required For</p>
+              <div className="space-y-0.5">
+                {requiredForCourses.slice(0, 5).map((label, i) => (
+                  <p key={i} className="text-[10px] text-amber-400/80 flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-amber-500 flex-shrink-0" />
+                    {label}
+                  </p>
+                ))}
+                {requiredForCourses.length > 5 && (
+                  <p className="text-[9px] text-zinc-600 font-mono">+{requiredForCourses.length - 5} more</p>
+                )}
+              </div>
+            </div>
           )}
         </div>
       )}
