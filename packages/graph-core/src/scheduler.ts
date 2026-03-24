@@ -133,6 +133,8 @@ export function generatePlan(
 
   const firstYearSet = new Set(input.firstYearCourses ?? []);
 
+  const totalTerms = terms.length;
+
   function priority(courseId: string, termSeason: "F" | "S", termIdx: number): number {
     const course = courseMap.get(courseId)!;
     const cp = criticalPathDepth(courseId, courseMap, completedSet, cpMemo);
@@ -150,7 +152,30 @@ export function generatePlan(
     // First-year required courses get a massive boost in the first 2 semesters
     const firstYearBoost = firstYearSet.has(courseId) && termIdx < 2 ? 20 : 0;
 
-    return 3 * cp + 2 * ds + 1 * isReq + preferredSemester + firstYearBoost;
+    // Category-aware scheduling timing:
+    // - Lower-div GEs should be taken early (freshman/sophomore years)
+    // - Upper-div GEs should be taken later (junior/senior years, after 60 units)
+    // - Major core courses should start early too (they unlock upper-div)
+    // - Support courses (PHYS, CHEM, ENGR) should go early alongside GEs
+    let categoryTiming = 0;
+    const earlyPhase = termIdx < totalTerms * 0.5;  // first half of semesters
+    const latePhase = termIdx >= totalTerms * 0.5;   // second half
+
+    if (course.category === "ge") {
+      // Lower-div GEs: strong boost in early semesters, penalty in late semesters
+      categoryTiming = earlyPhase ? 8 : -5;
+    } else if (course.category === "ge-upper") {
+      // Upper-div GEs: boost in later semesters (junior/senior), penalty early
+      categoryTiming = latePhase ? 5 : -8;
+    } else if (course.category === "support") {
+      // Support courses (PHYS, CHEM, ENGR 101/102): take early
+      categoryTiming = earlyPhase ? 4 : -2;
+    } else if (course.category === "core" || course.category === "math") {
+      // Core and math: slight early boost (they unlock everything)
+      categoryTiming = earlyPhase ? 3 : 0;
+    }
+
+    return 3 * cp + 2 * ds + 1 * isReq + preferredSemester + firstYearBoost + categoryTiming;
   }
 
   // Step 4: Semester assignment

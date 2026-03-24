@@ -7,6 +7,7 @@ import TrackSelector from "@/components/graph/TrackSelector";
 import ProgressBar from "@/components/shared/ProgressBar";
 import ViewModeToggle from "@/components/shared/ViewModeToggle";
 import TransferToggle from "@/components/shared/TransferToggle";
+import QuickSelect from "@/components/shared/QuickSelect";
 import DevTools from "@/components/shared/DevTools";
 import Link from "next/link";
 
@@ -46,6 +47,7 @@ export default function PlannerPage() {
         <div className="flex items-center gap-3">
           <ViewModeToggle />
           <TransferToggle />
+          <QuickSelect />
           <div className="w-px h-5 bg-beach-border" />
           <TrackSelector />
           <div className="w-px h-5 bg-beach-border" />

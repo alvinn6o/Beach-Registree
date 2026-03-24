@@ -3,13 +3,29 @@
 import { create } from "zustand";
 
 // GE placeholder courses (lower-division general education)
-const TRANSFER_GE_COURSES = [
+export const LOWER_GE_COURSES = [
   "GE-A1", "GE-A2", "GE-A3",
   "GE-B1", "GE-B2", "GE-B3", "GE-B4", "GE-B5",
   "GE-C1", "GE-C2", "GE-C3",
   "GE-D1", "GE-D2", "GE-D3", "GE-D4",
   "GE-E", "GE-F",
 ];
+
+// Upper-division GE courses
+export const UPPER_GE_COURSES = [
+  "GE-UD-B", "GE-UD-C", "GE-UD-D",
+];
+
+// Lower-division core courses (CECS + MATH + support)
+export const LOWER_CORE_COURSES = [
+  "CECS 105", "CECS 174", "CECS 225", "CECS 228", "CECS 229",
+  "CECS 274", "CECS 277",
+  "ENGR 101", "ENGR 102",
+  "MATH 122", "MATH 123",
+];
+
+// Backwards compat alias
+const TRANSFER_GE_COURSES = LOWER_GE_COURSES;
 
 // Lower-division CECS/MATH courses assumed completed by transfer students
 // NOTE: MATH 123 and science courses (PHYS 151, CHEM 111A) are NOT auto-completed
@@ -38,6 +54,7 @@ interface ProgressStore {
   minUnitsPerSemester: number;
   studentYear: StudentYear | null;
   toggleCompleted: (id: string) => void;
+  bulkToggle: (ids: string[]) => void;
   setCompleted: (ids: string[]) => void;
   clearCompleted: () => void;
   setTargetGraduation: (term: string) => void;
@@ -90,6 +107,20 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
         next.delete(id);
       } else {
         next.add(id);
+      }
+      saveToStorage("bt_completed", [...next]);
+      return { completed: next };
+    }),
+
+  bulkToggle: (ids) =>
+    set((state) => {
+      const next = new Set(state.completed);
+      // If all are already completed, remove them; otherwise add all
+      const allDone = ids.every((id) => next.has(id));
+      if (allDone) {
+        for (const id of ids) next.delete(id);
+      } else {
+        for (const id of ids) next.add(id);
       }
       saveToStorage("bt_completed", [...next]);
       return { completed: next };
