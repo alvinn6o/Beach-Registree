@@ -8,17 +8,20 @@ export const LEFT_PAD = 50;
 export const MAX_PER_ROW = 8;
 
 export const LAYER_LABELS = [
-  "Entry / Foundations",
+  "Lower Division — Entry",
   "Lower Division",
-  "Lower Division II",
-  "Intermediate",
+  "Lower Division — Advanced",
+  "Upper Division — Core",
   "Upper Division",
-  "Upper Division II",
-  "Advanced / Electives",
+  "Upper Division — Advanced",
+  "Upper Division — Electives",
   "Capstone",
   "Layer 8",
   "Layer 9",
 ];
+
+// Layer index where upper division starts (used for visual divider)
+export const UPPER_DIV_START_LAYER = 3;
 
 export const DEFAULT_UNITS = 15;
 export const MIN_UNITS = 12;

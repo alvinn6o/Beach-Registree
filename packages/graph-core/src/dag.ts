@@ -16,11 +16,15 @@ export function buildEdges(courses: Course[]): Edge[] {
 }
 
 // Minimum layer for categories that shouldn't appear at layer 0 with freshman courses
+// Lower division: layers 0-2 (100-200 level courses)
+// Upper division: layers 3+ (300-400 level courses)
 const CATEGORY_MIN_LAYER: Partial<Record<string, number>> = {
   upper: 3,
+  elective: 3,   // All electives are 300-400 level (upper division)
   capstone: 5,
-  ge: 0,       // Lower-div GE at entry level
+  ge: 0,          // Lower-div GE at entry level
   "ge-upper": 4,
+  support: 0,     // Support courses vary (ENGR 101 is lower, ENGR 350 is upper)
 };
 
 export function computeLayers(courses: Course[]): Map<string, number> {
@@ -33,24 +37,24 @@ export function computeLayers(courses: Course[]): Map<string, number> {
     visited.add(id);
 
     const c = courseMap.get(id);
-    if (!c || c.prerequisites.length === 0) {
-      // Apply minimum layer based on category so upper-div courses
-      // don't appear alongside freshman entry-level courses
+    const allPrereqs = c
+      ? [...c.prerequisites, ...c.prerequisites_or.flat()]
+      : [];
+
+    if (!c || allPrereqs.length === 0) {
+      // No prerequisites at all — apply minimum layer based on category
+      // so upper-div courses don't appear alongside freshman entry-level courses
       const minLayer = (c && CATEGORY_MIN_LAYER[c.category]) ?? 0;
       depth.set(id, minLayer);
       return minLayer;
     }
 
-    const allPrereqs = [
-      ...c.prerequisites,
-      ...c.prerequisites_or.flat(),
-    ];
     const maxDepth = Math.max(
       ...allPrereqs.map((p) => memo(p, new Set(visited)))
     );
     const d = maxDepth + 1;
     // Enforce category minimum layer
-    const minLayer = (c && CATEGORY_MIN_LAYER[c.category]) ?? 0;
+    const minLayer = CATEGORY_MIN_LAYER[c.category] ?? 0;
     const finalD = Math.max(d, minLayer);
     depth.set(id, finalD);
     return finalD;
@@ -156,7 +160,8 @@ export function detectCycles(courses: Course[]): string[][] {
 
     const c = courseMap.get(id);
     if (c) {
-      for (const p of c.prerequisites) {
+      const allPrereqs = [...c.prerequisites, ...c.prerequisites_or.flat()];
+      for (const p of allPrereqs) {
         dfs(p);
       }
     }

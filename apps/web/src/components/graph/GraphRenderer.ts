@@ -1,7 +1,7 @@
 import type { Course, Edge } from "graph-core";
 import type { NodePosition, LayerMeta } from "./GraphLayout";
 import { categoryColors, statusColors, graphColors } from "@/lib/colors";
-import { NODE_W, NODE_H, LAYER_GAP, TOP_PAD, LAYER_LABELS } from "@/lib/constants";
+import { NODE_W, NODE_H, LAYER_GAP, TOP_PAD, LAYER_LABELS, UPPER_DIV_START_LAYER } from "@/lib/constants";
 
 interface OrGroup {
   name: string;
@@ -104,6 +104,30 @@ export class GraphRenderer {
         ctx.beginPath();
         ctx.roundRect(-60, y, 3000, h, 6);
         ctx.fill();
+      }
+
+      // Divider line between Lower and Upper Division
+      if (l === UPPER_DIV_START_LAYER) {
+        const dividerY = y - 8;
+        ctx.save();
+        ctx.strokeStyle = "#3a3d52";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.moveTo(-40, dividerY);
+        ctx.lineTo(2900, dividerY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // "UPPER DIVISION" / "LOWER DIVISION" section labels
+        ctx.fillStyle = "#4a4d62";
+        ctx.font = "700 8px 'JetBrains Mono', monospace";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "bottom";
+        ctx.fillText("— LOWER DIVISION —", 2900, dividerY - 3);
+        ctx.textBaseline = "top";
+        ctx.fillText("— UPPER DIVISION —", 2900, dividerY + 3);
+        ctx.restore();
       }
 
       // Layer label
