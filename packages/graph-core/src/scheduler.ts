@@ -95,14 +95,19 @@ function academicPhasePreference(course: Course): number {
   if (course.category === "capstone") return 0.95;
   if (course.minUnitsCompleted && course.minUnitsCompleted >= 90) return 0.9;
   if (course.minUnitsCompleted && course.minUnitsCompleted >= 60) return 0.72;
-  if (course.category === "ge-upper") return 0.65;
+  if (course.category === "ge-upper") return 0.75;
   if (course.category === "upper") return 0.62;
   if (course.category === "elective") return 0.58;
-  // GE courses should be scheduled in the first ~40% of the plan (discovery years)
-  if (course.category === "ge") return 0.12;
-  if (course.category === "support") return level && level >= 300 ? 0.55 : 0.20;
-  if (course.category === "math") return level && level >= 300 ? 0.48 : 0.15;
-  if (course.category === "core") return level && level >= 300 ? 0.5 : 0.18;
+  // GEs spread across the plan: foundations early (0.15), others mid-to-late (0.45)
+  // This matches official CSULB roadmaps where foundation GEs are year 1,
+  // but arts/humanities/social science fill semesters 5-8.
+  if (course.category === "ge") {
+    const lvl = inferCourseLevel(course);
+    return lvl !== null && lvl < 200 ? 0.15 : 0.45;
+  }
+  if (course.category === "support") return level && level >= 300 ? 0.55 : 0.22;
+  if (course.category === "math") return level && level >= 300 ? 0.48 : 0.18;
+  if (course.category === "core") return level && level >= 300 ? 0.5 : 0.20;
 
   return 0.5;
 }
@@ -557,13 +562,14 @@ export function generatePlan(
     const urgencyBoost = slack <= 1 ? 14 : slack === 2 ? 7 : slack === 3 ? 3 : 0;
     // First-year required courses get a massive boost in the first 2 semesters
     const firstYearBoost = firstYearSet.has(courseId) && termIdx < 2 ? 20 : 0;
-    // GE courses get a boost in early semesters (first 40% of plan) to reflect
-    // the real pattern where students complete GEs during discovery years 1-2
-    const geEarlyBoost =
-      (course.category === "ge" || course.category === "math") &&
-      termIdx < Math.ceil(totalTerms * 0.4)
-        ? 10
-        : 0;
+    // Foundation GEs (100-level, English/Comm) get a boost in the first 2 semesters
+    // to match the real pattern where students complete foundations early.
+    // Other GEs (arts, humanities, social science) spread naturally across the plan
+    // as shown in official CSULB roadmaps (GE 3A/3B in year 3-4, GE 6/F in year 4).
+    const level = inferCourseLevel(course);
+    const isFoundationGE =
+      course.category === "ge" && level !== null && level < 200;
+    const geFoundationBoost = isFoundationGE && termIdx < 2 ? 8 : 0;
 
     return (
       4 * cp +
@@ -571,7 +577,7 @@ export function generatePlan(
       2 * isReq +
       urgencyBoost +
       firstYearBoost +
-      geEarlyBoost +
+      geFoundationBoost +
       phaseScore
     );
   }
