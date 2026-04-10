@@ -131,7 +131,8 @@ export function buildBlockedCourseRecoverySuggestions(
   const required = resolveRequirementCourses(
     major,
     [...selectedElectives, ...completedCourses, ...semesters.flatMap((semester) => semester.courses)],
-    new Set(courseMap.keys())
+    new Set(courseMap.keys()),
+    { fillDefaultsForChoose: false }
   ).allRequired;
 
   const blocked: RecoverySuggestion[] = [];

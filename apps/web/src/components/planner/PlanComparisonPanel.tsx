@@ -1,15 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
-import { assessPlanHealth } from "graph-core";
 import { useCourseStore } from "@/stores/courseStore";
 import type { SavedPlan } from "@/stores/savedPlansStore";
 import type { PlanResult } from "graph-core";
+import { assessTrackAwarePlanHealth } from "@/lib/trackRequirements";
 
 interface PlanComparisonPanelProps {
   currentPlan: PlanResult;
   currentCompleted: string[];
   currentSelectedElectives: string[];
+  currentSelectedTrack: string | null;
   comparePlan: SavedPlan;
 }
 
@@ -27,6 +28,7 @@ export default function PlanComparisonPanel({
   currentPlan,
   currentCompleted,
   currentSelectedElectives,
+  currentSelectedTrack,
   comparePlan,
 }: PlanComparisonPanelProps) {
   const courses = useCourseStore((state) => state.allCourses);
@@ -35,21 +37,23 @@ export default function PlanComparisonPanel({
   const minUnitsPerSemester = 12;
 
   const comparison = useMemo(() => {
-    const current = assessPlanHealth({
+    const current = assessTrackAwarePlanHealth({
       courses,
       plan: currentPlan,
       completedCourseIds: currentCompleted,
       majorRequirements: major,
       selectedElectives: currentSelectedElectives,
+      selectedTrack: currentSelectedTrack,
       preferredUnits,
       minUnitsPerSemester,
     });
-    const saved = assessPlanHealth({
+    const saved = assessTrackAwarePlanHealth({
       courses,
       plan: comparePlan.plan,
       completedCourseIds: comparePlan.completedCourses,
       majorRequirements: major,
       selectedElectives: comparePlan.selectedElectives,
+      selectedTrack: comparePlan.selectedTrack ?? null,
       preferredUnits,
       minUnitsPerSemester,
     });
@@ -71,6 +75,7 @@ export default function PlanComparisonPanel({
     currentCompleted,
     currentPlan,
     currentSelectedElectives,
+    currentSelectedTrack,
     major,
   ]);
 

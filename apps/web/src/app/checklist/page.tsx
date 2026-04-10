@@ -1,22 +1,16 @@
 "use client";
 
-import { resolveRequirementCourses } from "graph-core";
 import { useCourseStore } from "@/stores/courseStore";
 import { useProgressStore } from "@/stores/progressStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import AppHeader from "@/components/shared/AppHeader";
-import tracksData from "../../../../../data/csulb/cs_bs_tracks.json";
-
-interface Track {
-  id: string;
-  name: string;
-  description: string;
-  color: string;
-  required?: string[];
-  electives: string[];
-}
-
-const tracks = tracksData as Track[];
+import {
+  TRACK_REQUIREMENT_NAME,
+  TRACK_SELECTION_MESSAGE,
+  getTrackAwareMajorRequirements,
+  getTrackById,
+  resolveTrackAwareRequirementCourses,
+} from "@/lib/trackRequirements";
 
 const CATEGORY_LABELS: Record<string, string> = {
   math: "Math",
@@ -41,16 +35,19 @@ export default function ChecklistPage() {
   const toggleElective = useProgressStore((s) => s.toggleElective);
   const plan = usePlannerStore((s) => s.plan);
 
-  const activeTrack = selectedTrack ? tracks.find((t) => t.id === selectedTrack) : null;
+  const activeTrack = getTrackById(selectedTrack);
+  const trackMajor = getTrackAwareMajorRequirements(major, selectedTrack);
   const trackCourseSet = activeTrack
     ? new Set([...(activeTrack.required ?? []), ...activeTrack.electives])
     : null;
 
   const plannedIds = new Set(plan?.semesters.flatMap((s) => s.courses) ?? []);
-  const resolvedRequirements = resolveRequirementCourses(
+  const resolvedRequirements = resolveTrackAwareRequirementCourses(
     major,
+    selectedTrack,
     [...selectedElectives, ...completed, ...plannedIds],
-    new Set(allCourses.map((course) => course.id))
+    new Set(allCourses.map((course) => course.id)),
+    { fillDefaultsForChoose: false }
   );
 
   function getCourseStatus(courseId: string): CourseStatus {
@@ -71,7 +68,7 @@ export default function ChecklistPage() {
 
   const rows: Row[] = [];
 
-  for (const req of major.requirements) {
+  for (const req of trackMajor.requirements) {
     let courseIds: string[];
     if (req.type === "choose") {
       courseIds = resolvedRequirements.byRequirement[req.name] ?? [];
@@ -101,7 +98,7 @@ export default function ChecklistPage() {
   const completedUnits = rows.filter((r) => r.status === "completed").reduce((sum, r) => sum + r.units, 0);
   const plannedUnits = rows.filter((r) => r.status === "planned").reduce((sum, r) => sum + r.units, 0);
 
-  const groups = major.requirements.map((req) => ({
+  const groups = trackMajor.requirements.map((req) => ({
     name: req.name,
     type: req.type,
     count: req.count,
@@ -113,7 +110,7 @@ export default function ChecklistPage() {
   // Each group contributes proportionally: completed_in_group / needed_in_group
   let reqProgress = 0;
   let reqTotal = 0;
-  for (const req of major.requirements) {
+  for (const req of trackMajor.requirements) {
     if (req.type === "all") {
       reqTotal += req.courses.length;
       reqProgress += req.courses.filter((id) => completed.has(id)).length;
@@ -211,6 +208,11 @@ export default function ChecklistPage() {
                 {/* For "choose" groups: show all available options as selectable pills */}
                 {isChoose && (
                   <div className="mb-2 flex flex-wrap gap-1.5">
+                    {group.name === TRACK_REQUIREMENT_NAME && !activeTrack && (
+                      <div className="w-full rounded-xl border border-amber-800/40 bg-amber-950/20 px-3 py-2 text-[11px] font-mono text-amber-300">
+                        {TRACK_SELECTION_MESSAGE}
+                      </div>
+                    )}
                     {(() => {
                       // Sort: track courses first when a track is active on focus area groups
                       const isFocusGroup = group.name.toLowerCase().includes("focus");
@@ -265,7 +267,9 @@ export default function ChecklistPage() {
                 {/* No rows selected — show placeholder */}
                 {group.rows.length === 0 ? (
                   <div className="border border-beach-border/50 rounded-xl px-4 py-3 text-[11px] font-mono text-zinc-600">
-                    {isChoose
+                    {group.name === TRACK_REQUIREMENT_NAME && !activeTrack
+                      ? "Choose a track above to load the correct 12-unit focus area."
+                      : isChoose
                       ? `Select ${needed} course${needed !== 1 ? "s" : ""} above — they will appear here`
                       : "No courses to display"}
                   </div>

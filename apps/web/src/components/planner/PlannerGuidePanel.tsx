@@ -1,23 +1,38 @@
 "use client";
 
-import { assessPlanHealth } from "graph-core";
 import { useCourseStore } from "@/stores/courseStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { useProgressStore } from "@/stores/progressStore";
+import { assessTrackAwarePlanHealth } from "@/lib/trackRequirements";
 
 function getNextStep(params: {
   completedCount: number;
   selectedElectivesCount: number;
+  selectedTrack: string | null;
   hasPlan: boolean;
   hardIssues: number;
   warningIssues: number;
 }) {
-  const { completedCount, selectedElectivesCount, hasPlan, hardIssues, warningIssues } = params;
+  const {
+    completedCount,
+    selectedElectivesCount,
+    selectedTrack,
+    hasPlan,
+    hardIssues,
+    warningIssues,
+  } = params;
 
   if (completedCount === 0) {
     return {
       label: "Start by marking completed classes",
       detail: "Students often lose time because the system cannot tell what is already done. Mark completed courses first for a trustworthy plan.",
+    };
+  }
+
+  if (!selectedTrack) {
+    return {
+      label: "Choose a focus-area track",
+      detail: "The planner needs one track so the 12-unit focus area resolves correctly and does not treat cross-track options as required.",
     };
   }
 
@@ -61,16 +76,18 @@ export default function PlannerGuidePanel() {
   const major = useCourseStore((state) => state.major);
   const completed = useProgressStore((state) => state.completed);
   const selectedElectives = useProgressStore((state) => state.selectedElectives);
+  const selectedTrack = useProgressStore((state) => state.selectedTrack);
   const preferredUnits = useProgressStore((state) => state.preferredUnits);
   const minUnitsPerSemester = useProgressStore((state) => state.minUnitsPerSemester);
 
   const report = plan
-    ? assessPlanHealth({
+    ? assessTrackAwarePlanHealth({
         courses,
         plan,
         completedCourseIds: [...completed],
         majorRequirements: major,
         selectedElectives,
+        selectedTrack,
         preferredUnits,
         minUnitsPerSemester,
       })
@@ -79,6 +96,7 @@ export default function PlannerGuidePanel() {
   const nextStep = getNextStep({
     completedCount: completed.size,
     selectedElectivesCount: selectedElectives.length,
+    selectedTrack,
     hasPlan: Boolean(plan),
     hardIssues: report?.hardIssueCount ?? 0,
     warningIssues: report?.warningCount ?? 0,

@@ -24,7 +24,9 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
   const completed = useProgressStore((s) => s.completed);
   const setCompleted = useProgressStore((s) => s.setCompleted);
   const selectedElectives = useProgressStore((s) => s.selectedElectives);
+  const selectedTrack = useProgressStore((s) => s.selectedTrack);
   const setSelectedElectives = useProgressStore((s) => s.setSelectedElectives);
+  const setSelectedTrack = useProgressStore((s) => s.setSelectedTrack);
 
   const [newPlanName, setNewPlanName] = useState("");
   const [newPlanNotes, setNewPlanNotes] = useState("");
@@ -42,7 +44,7 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
   function handleSave() {
     if (!plan) return;
     const name = newPlanName.trim() || `Plan ${sortedPlans.length + 1}`;
-    savePlan(name, plan, [...completed], selectedElectives, newPlanNotes);
+    savePlan(name, plan, [...completed], selectedElectives, selectedTrack, newPlanNotes);
     setNewPlanName("");
     setNewPlanNotes("");
   }
@@ -53,6 +55,7 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
     setPlan(saved.plan);
     setCompleted(saved.completedCourses);
     setSelectedElectives(saved.selectedElectives);
+    setSelectedTrack(saved.selectedTrack ?? null);
   }
 
   function handleDelete(id: string) {
@@ -150,6 +153,7 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
             currentPlan={plan}
             currentCompleted={[...completed]}
             currentSelectedElectives={selectedElectives}
+            currentSelectedTrack={selectedTrack}
             comparePlan={comparePlan}
           />
         )}

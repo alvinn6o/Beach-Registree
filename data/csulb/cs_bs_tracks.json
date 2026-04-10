@@ -19,7 +19,7 @@
     "id": "ml_ai",
     "name": "Machine Learning & AI",
     "description": "Artificial intelligence, machine learning, and data-driven systems.",
-    "color": "#a855f7",
+    "color": "#f59e0b",
     "required": ["CECS 456"],
     "electives": ["CECS 427", "CECS 429", "CECS 450", "CECS 451", "CECS 457", "CECS 458"]
   }

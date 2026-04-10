@@ -2,16 +2,19 @@
 
 import { useCourseStore } from "@/stores/courseStore";
 import { useProgressStore } from "@/stores/progressStore";
+import { getTrackAwareMajorRequirements } from "@/lib/trackRequirements";
 
 export default function ProgressBar() {
   const major = useCourseStore((s) => s.major);
   const viewMode = useCourseStore((s) => s.viewMode);
   const completed = useProgressStore((s) => s.completed);
   const selectedElectives = useProgressStore((s) => s.selectedElectives);
+  const selectedTrack = useProgressStore((s) => s.selectedTrack);
+  const trackMajor = getTrackAwareMajorRequirements(major, selectedTrack);
 
   // Count required courses based on view mode
   const allRequired: string[] = [];
-  for (const req of major.requirements) {
+  for (const req of trackMajor.requirements) {
     if (req.type === "all") {
       // In major mode, skip GE and support courses
       if (viewMode === "major") {

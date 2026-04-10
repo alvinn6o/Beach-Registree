@@ -10,6 +10,7 @@ import { usePlannerStore } from "@/stores/plannerStore";
 import { getPlacementHint, summarizePlacementErrors } from "@/lib/planner";
 import type { SemesterPlan, MajorRequirements } from "graph-core";
 import type { ValidationError } from "graph-core";
+import { getTrackAwareMajorRequirements } from "@/lib/trackRequirements";
 
 /** Check if a course belongs to a "choose N" group that's already satisfied */
 function isGroupSatisfied(
@@ -46,8 +47,10 @@ export default function SemesterColumn({ semester, errors }: SemesterColumnProps
   const allCourses = useCourseStore((s) => s.allCourses);
   const major = useCourseStore((s) => s.major);
   const completed = useProgressStore((s) => s.completed);
+  const selectedTrack = useProgressStore((s) => s.selectedTrack);
   const plan = usePlannerStore((s) => s.plan);
   const addCourse = usePlannerStore((s) => s.addCourse);
+  const trackMajor = getTrackAwareMajorRequirements(major, selectedTrack);
 
   const [adding, setAdding] = useState(false);
   const [query, setQuery] = useState("");
@@ -198,7 +201,7 @@ export default function SemesterColumn({ semester, errors }: SemesterColumnProps
                     completedList
                   );
                   const isBlocked = placementErrors.length > 0;
-                  const satisfied = isGroupSatisfied(c.id, major, scheduledIds, completed);
+                  const satisfied = isGroupSatisfied(c.id, trackMajor, scheduledIds, completed);
                   const placementHint = getPlacementHint(
                     c.id,
                     plan?.semesters ?? [],

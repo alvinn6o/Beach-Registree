@@ -5,6 +5,7 @@ import { useCourseStore } from "@/stores/courseStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { useProgressStore } from "@/stores/progressStore";
 import { buildBlockedCourseRecoverySuggestions } from "@/lib/planner";
+import { getTrackAwareMajorRequirements } from "@/lib/trackRequirements";
 import TransferAssumptionsPanel from "./TransferAssumptionsPanel";
 import RecoveryPanel from "./RecoveryPanel";
 import PlanInsightsPanel from "./PlanInsightsPanel";
@@ -24,8 +25,10 @@ export default function PlannerDetailsDeck() {
   const major = useCourseStore((state) => state.major);
   const completed = useProgressStore((state) => state.completed);
   const selectedElectives = useProgressStore((state) => state.selectedElectives);
+  const selectedTrack = useProgressStore((state) => state.selectedTrack);
   const preferredUnits = useProgressStore((state) => state.preferredUnits);
   const isTransferStudent = useProgressStore((state) => state.isTransferStudent);
+  const trackMajor = getTrackAwareMajorRequirements(major, selectedTrack);
 
   const recoveryCount = useMemo(() => {
     if (!plan) return 0;
@@ -33,11 +36,11 @@ export default function PlannerDetailsDeck() {
       plan.semesters,
       courses,
       [...completed],
-      major,
+      trackMajor,
       selectedElectives,
       preferredUnits
     ).length;
-  }, [completed, courses, major, plan, preferredUnits, selectedElectives]);
+  }, [completed, courses, plan, preferredUnits, selectedElectives, trackMajor]);
 
   const availableSections = useMemo(() => {
     const sections: DetailKey[] = [];

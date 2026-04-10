@@ -4,10 +4,16 @@ import { useCallback, useState } from "react";
 import { useProgressStore } from "@/stores/progressStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { useCourseStore } from "@/stores/courseStore";
-import { assessPlanHealth, generatePlan, resolveRequirementCourses } from "graph-core";
+import { generatePlan } from "graph-core";
 import { MIN_UNITS, MAX_UNITS } from "@/lib/constants";
 import type { StudentYear } from "@/stores/progressStore";
 import TransferToggle from "@/components/shared/TransferToggle";
+import {
+  TRACK_SELECTION_MESSAGE,
+  assessTrackAwarePlanHealth,
+  getTrackAwareMajorRequirements,
+  resolveTrackAwareRequirementCourses,
+} from "@/lib/trackRequirements";
 
 /** Returns the NEXT upcoming semester (not the current one in progress).
  *  If we're in Spring 2026, planning starts from Fall 2026.
@@ -69,6 +75,7 @@ export default function PlannerControls() {
   const preferredUnits = useProgressStore((s) => s.preferredUnits);
   const minUnitsPerSemester = useProgressStore((s) => s.minUnitsPerSemester);
   const selectedElectives = useProgressStore((s) => s.selectedElectives);
+  const selectedTrack = useProgressStore((s) => s.selectedTrack);
   const studentYear = useProgressStore((s) => s.studentYear);
   const isTransferStudent = useProgressStore((s) => s.isTransferStudent);
   const transferScienceChoice = useProgressStore((s) => s.transferScienceChoice);
@@ -79,14 +86,16 @@ export default function PlannerControls() {
   const plan = usePlannerStore((s) => s.plan);
   const setPlan = usePlannerStore((s) => s.setPlan);
   const clearPlan = usePlannerStore((s) => s.clearPlan);
+  const trackMajor = getTrackAwareMajorRequirements(major, selectedTrack);
   const completedCount = completed.size;
   const report = plan
-    ? assessPlanHealth({
+    ? assessTrackAwarePlanHealth({
         courses: allCourses,
         plan,
         completedCourseIds: [...completed],
         majorRequirements: major,
         selectedElectives,
+        selectedTrack,
         preferredUnits,
         minUnitsPerSemester,
       })
@@ -120,10 +129,13 @@ export default function PlannerControls() {
   })();
 
   const handleGenerate = useCallback(() => {
+    if (!selectedTrack) return;
+
     // Always use allCourses so GE + support courses get scheduled regardless of viewMode
     const coursesToUse = allCourses;
-    const resolved = resolveRequirementCourses(
+    const resolved = resolveTrackAwareRequirementCourses(
       major,
+      selectedTrack,
       selectedElectives,
       new Set(coursesToUse.map((course) => course.id))
     );
@@ -139,7 +151,7 @@ export default function PlannerControls() {
       : ["CECS 174", "MATH 122", "ENGR 101"];
     const result = generatePlan(coursesToUse, {
       completedCourses: [...completed],
-      majorRequirements: major,
+      majorRequirements: trackMajor,
       selectedElectives,
       currentSemester: CURRENT_SEMESTER,
       targetGraduation: effectiveTarget,
@@ -151,7 +163,21 @@ export default function PlannerControls() {
     setPlan(result);
     // Trigger post-plan survey (fires once, survey checks localStorage)
     window.dispatchEvent(new Event("beach-plan-generated"));
-  }, [allCourses, major, viewMode, completed, effectiveTarget, preferredUnits, minUnitsPerSemester, selectedElectives, isTransferStudent, transferScienceChoice, setPlan]);
+  }, [
+    allCourses,
+    completed,
+    effectiveTarget,
+    isTransferStudent,
+    major,
+    minUnitsPerSemester,
+    preferredUnits,
+    selectedElectives,
+    selectedTrack,
+    setPlan,
+    trackMajor,
+    transferScienceChoice,
+    viewMode,
+  ]);
 
   // NOTE: We intentionally do NOT auto-regenerate the plan when viewMode changes.
   // The plan uses allCourses regardless of viewMode, and regenerating would
@@ -178,7 +204,7 @@ export default function PlannerControls() {
             {completedCount} complete
           </span>
           <span className="rounded-full border border-beach-border bg-beach-dark/70 px-3 py-1.5 text-zinc-400">
-            {selectedElectives.length} custom picks
+            {selectedTrack ? `${selectedElectives.length} selected electives` : "Track required"}
           </span>
           {plan && (
             <span className="rounded-full border border-blue-900/40 bg-blue-950/20 px-3 py-1.5 text-blue-300">
@@ -276,6 +302,11 @@ export default function PlannerControls() {
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+        {!selectedTrack && (
+          <p className="w-full text-center text-xs text-amber-300">
+            {TRACK_SELECTION_MESSAGE}
+          </p>
+        )}
         <button
           onClick={clearPlan}
           className="rounded-xl border border-beach-border px-4 py-2 text-sm text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
@@ -284,7 +315,8 @@ export default function PlannerControls() {
         </button>
         <button
           onClick={handleGenerate}
-          className="rounded-2xl bg-zinc-100 px-10 py-3 text-sm font-semibold text-zinc-950 shadow-[0_10px_30px_rgba(255,255,255,0.08)] transition-all hover:-translate-y-0.5 hover:bg-white"
+          disabled={!selectedTrack}
+          className="rounded-2xl bg-zinc-100 px-10 py-3 text-sm font-semibold text-zinc-950 shadow-[0_10px_30px_rgba(255,255,255,0.08)] transition-all hover:-translate-y-0.5 hover:bg-white disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 disabled:hover:translate-y-0"
         >
           Generate Plan
         </button>

@@ -10,6 +10,9 @@ import type { CourseStatus } from "graph-core";
 import tracksData from "../../../../../data/csulb/cs_bs_tracks.json";
 
 const allTracks = tracksData as { id: string; color: string; electives: string[]; required?: string[] }[];
+const DEFAULT_TRANSFORM = { x: 80, y: 20, k: 1 };
+const CONTENT_MARGIN_X = 120;
+const CONTENT_MARGIN_Y = 90;
 
 interface CourseGraphProps {
   onSelectCourse: (id: string | null) => void;
@@ -19,7 +22,7 @@ interface CourseGraphProps {
 export default function CourseGraph({ onSelectCourse, selectedCourse }: CourseGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<GraphRenderer | null>(null);
-  const [transform, setTransform] = useState({ x: 80, y: 20, k: 1 });
+  const [transform, setTransform] = useState(DEFAULT_TRANSFORM);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -77,6 +80,44 @@ export default function CourseGraph({ onSelectCourse, selectedCourse }: CourseGr
 
   const { positions, layerMetas } = layoutNodes(filteredCourses, layers, maxLayer);
 
+  function clampAxis(
+    offset: number,
+    scale: number,
+    viewportSize: number,
+    minWorld: number,
+    maxWorld: number
+  ): number {
+    const contentSize = (maxWorld - minWorld) * scale;
+    if (contentSize <= viewportSize) {
+      return (viewportSize - contentSize) / 2 - minWorld * scale;
+    }
+
+    const minOffset = viewportSize - maxWorld * scale;
+    const maxOffset = -minWorld * scale;
+    return Math.min(maxOffset, Math.max(minOffset, offset));
+  }
+
+  const clampTransform = useCallback(
+    (next: { x: number; y: number; k: number }) => {
+      const canvas = canvasRef.current;
+      if (!canvas || positions.size === 0) return next;
+
+      const rect = canvas.getBoundingClientRect();
+      const nodes = [...positions.values()];
+      const minX = Math.min(...nodes.map((pos) => pos.x)) - CONTENT_MARGIN_X;
+      const maxX = Math.max(...nodes.map((pos) => pos.x + pos.width)) + CONTENT_MARGIN_X;
+      const minY = Math.min(...nodes.map((pos) => pos.y)) - CONTENT_MARGIN_Y;
+      const maxY = Math.max(...nodes.map((pos) => pos.y + pos.height)) + CONTENT_MARGIN_Y;
+
+      return {
+        x: clampAxis(next.x, next.k, rect.width, minX, maxX),
+        y: clampAxis(next.y, next.k, rect.height, minY, maxY),
+        k: next.k,
+      };
+    },
+    [positions]
+  );
+
   // Build status map — "planned" overrides "available"/"locked" when course is in planner
   type ExtendedStatus = CourseStatus | "planned";
   const statusMap = new Map<string, ExtendedStatus>();
@@ -93,6 +134,15 @@ export default function CourseGraph({ onSelectCourse, selectedCourse }: CourseGr
   const activeId = hoveredNode || selectedCourse;
   const highlighted = activeId ? getPathToFn(activeId) : null;
   const downstream = activeId ? getDownstreamFn(activeId) : null;
+
+  useEffect(() => {
+    setTransform((prev) => {
+      const clamped = clampTransform(prev);
+      return clamped.x === prev.x && clamped.y === prev.y && clamped.k === prev.k
+        ? prev
+        : clamped;
+    });
+  }, [clampTransform]);
 
   // Draw
   useEffect(() => {
@@ -148,11 +198,13 @@ export default function CourseGraph({ onSelectCourse, selectedCourse }: CourseGr
       const y = e.clientY - rect.top;
 
       if (isDragging) {
-        setTransform((prev) => ({
-          ...prev,
-          x: e.clientX - dragStart.x,
-          y: e.clientY - dragStart.y,
-        }));
+        setTransform((prev) =>
+          clampTransform({
+            ...prev,
+            x: e.clientX - dragStart.x,
+            y: e.clientY - dragStart.y,
+          })
+        );
         return;
       }
 
@@ -185,41 +237,99 @@ export default function CourseGraph({ onSelectCourse, selectedCourse }: CourseGr
     [isDragging, transform, positions, selectedCourse, onSelectCourse]
   );
 
+  // Scroll pans vertically (normal page scroll behavior on the graph)
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       e.preventDefault();
+      setTransform((prev) =>
+        clampTransform({
+          ...prev,
+          x: prev.x - e.deltaX,
+          y: prev.y - e.deltaY,
+        })
+      );
+    },
+    [clampTransform]
+  );
+
+  // Zoom controls via buttons
+  const handleZoom = useCallback(
+    (direction: "in" | "out" | "reset") => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
 
-      const scaleFactor = e.deltaY > 0 ? 0.92 : 1.08;
+      if (direction === "reset") {
+        setTransform(clampTransform(DEFAULT_TRANSFORM));
+        return;
+      }
+
+      const scaleFactor = direction === "in" ? 1.25 : 0.8;
       const newK = Math.min(Math.max(transform.k * scaleFactor, 0.2), 3);
 
-      setTransform((prev) => ({
-        x: centerX - (centerX - prev.x) * (newK / prev.k),
-        y: centerY - (centerY - prev.y) * (newK / prev.k),
-        k: newK,
-      }));
+      setTransform((prev) =>
+        clampTransform({
+          x: centerX - (centerX - prev.x) * (newK / prev.k),
+          y: centerY - (centerY - prev.y) * (newK / prev.k),
+          k: newK,
+        })
+      );
     },
-    [transform]
+    [clampTransform, transform]
   );
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="w-full h-full"
-      role="img"
-      aria-label="Interactive course prerequisite graph — click nodes to select, scroll to zoom, drag to pan"
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={() => {
-        setIsDragging(false);
-        setHoveredNode(null);
-      }}
-      onWheel={handleWheel}
-    />
+    <div className="relative w-full h-full">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full"
+        role="img"
+        aria-label="Interactive course prerequisite graph — click nodes to select, scroll to pan, use buttons to zoom"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={() => {
+          setIsDragging(false);
+          setHoveredNode(null);
+        }}
+        onWheel={handleWheel}
+      />
+
+      {/* Zoom controls */}
+      <div className="absolute bottom-4 right-4 flex flex-col gap-1.5">
+        <button
+          onClick={() => handleZoom("in")}
+          className="w-9 h-9 rounded-xl border border-beach-border bg-beach-card/90 backdrop-blur-sm text-zinc-300 hover:text-white hover:border-zinc-500 transition-all flex items-center justify-center shadow-lg"
+          title="Zoom in"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <line x1="11" y1="8" x2="11" y2="14" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </svg>
+        </button>
+        <button
+          onClick={() => handleZoom("out")}
+          className="w-9 h-9 rounded-xl border border-beach-border bg-beach-card/90 backdrop-blur-sm text-zinc-300 hover:text-white hover:border-zinc-500 transition-all flex items-center justify-center shadow-lg"
+          title="Zoom out"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </svg>
+        </button>
+        <button
+          onClick={() => handleZoom("reset")}
+          className="w-9 h-9 rounded-xl border border-beach-border bg-beach-card/90 backdrop-blur-sm text-zinc-400 hover:text-white hover:border-zinc-500 transition-all flex items-center justify-center shadow-lg text-[10px] font-mono"
+          title="Reset zoom"
+        >
+          1:1
+        </button>
+      </div>
+    </div>
   );
 }

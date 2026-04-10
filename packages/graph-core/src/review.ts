@@ -120,7 +120,8 @@ export function assessPlanHealth({
   const { allRequired, byRequirement } = resolveRequirementCourses(
     majorRequirements,
     candidateIds,
-    new Set(courseMap.keys())
+    new Set(courseMap.keys()),
+    { fillDefaultsForChoose: false }
   );
 
   const issues: PlanHealthIssue[] = [...validationIssues];

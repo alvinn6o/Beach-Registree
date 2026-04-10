@@ -11,6 +11,7 @@ import QuickSelect from "@/components/shared/QuickSelect";
 import DevTools from "@/components/shared/DevTools";
 import SelectionActions from "@/components/shared/SelectionActions";
 import { useProgressStore } from "@/stores/progressStore";
+import { getTrackLabel } from "@/lib/trackRequirements";
 
 type PageKey = "graph" | "planner" | "checklist";
 
@@ -28,9 +29,9 @@ interface AppHeaderProps {
 export default function AppHeader({ activePage, extraControls }: AppHeaderProps) {
   const [showSetup, setShowSetup] = useState(false);
   const completed = useProgressStore((state) => state.completed);
-  const selectedElectives = useProgressStore((state) => state.selectedElectives);
   const selectedTrack = useProgressStore((state) => state.selectedTrack);
   const isTransfer = useProgressStore((state) => state.isTransferStudent);
+  const selectedTrackLabel = getTrackLabel(selectedTrack);
 
   return (
     <header className="border-b border-beach-border glass">
@@ -82,24 +83,32 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
       </div>
 
       <div className="px-4 pb-3">
-        <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-500">
-          <span className="rounded-full border border-beach-border/70 bg-beach-card/50 px-2.5 py-1">
-            {completed.size} complete
-          </span>
-          <span className="rounded-full border border-beach-border/70 bg-beach-card/50 px-2.5 py-1">
-            {selectedTrack ? `Track: ${selectedTrack}` : `${selectedElectives.length} custom picks`}
-          </span>
-          {isTransfer && (
-            <span className="rounded-full border border-amber-800/70 bg-amber-950/20 px-2.5 py-1 text-amber-300">
-              Transfer plan
+        <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-zinc-500">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-beach-border/70 bg-beach-card/50 px-2.5 py-1">
+              {completed.size} complete
             </span>
-          )}
+            <span className="rounded-full border border-beach-border/70 bg-beach-card/50 px-2.5 py-1">
+              {selectedTrackLabel
+                ? `Track: ${selectedTrackLabel}`
+                : "Track required"}
+            </span>
+            {isTransfer && (
+              <span className="rounded-full border border-amber-800/70 bg-amber-950/20 px-2.5 py-1 text-amber-300">
+                Transfer plan
+              </span>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-beach-border/70 bg-beach-card/40 px-3 py-2">
+            <TrackSelector />
+          </div>
         </div>
       </div>
 
       {showSetup && (
         <div className="border-t border-beach-border/60 px-4 py-3">
-          <div className="grid gap-3 xl:grid-cols-[auto_auto_auto_1fr]">
+          <div className="grid gap-3 xl:grid-cols-[auto_auto_1fr]">
             <div className="rounded-2xl border border-beach-border/70 bg-beach-card/40 px-3 py-3">
               <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-600">
                 Profile
@@ -116,15 +125,6 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <QuickSelect />
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-beach-border/70 bg-beach-card/40 px-3 py-3">
-              <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-600">
-                Focus Area
-              </p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <TrackSelector />
               </div>
             </div>
 

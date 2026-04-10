@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { assessPlanHealth } from "graph-core";
 import { buildStakeholderReportText } from "@/lib/stakeholderReport";
 import { useCourseStore } from "@/stores/courseStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { useProgressStore } from "@/stores/progressStore";
+import { assessTrackAwarePlanHealth } from "@/lib/trackRequirements";
 
 interface StakeholderReportPanelProps {
   embedded?: boolean;
@@ -26,12 +26,13 @@ export default function StakeholderReportPanel({ embedded = false }: Stakeholder
 
   const reportText = useMemo(() => {
     if (!plan) return null;
-    const report = assessPlanHealth({
+    const report = assessTrackAwarePlanHealth({
       courses,
       plan,
       completedCourseIds: [...completed],
       majorRequirements: major,
       selectedElectives,
+      selectedTrack,
       preferredUnits,
       minUnitsPerSemester,
     });

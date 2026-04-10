@@ -5,15 +5,21 @@ export interface ResolvedRequirements {
   byRequirement: Record<string, string[]>;
 }
 
+export interface ResolveRequirementOptions {
+  fillDefaultsForChoose?: boolean;
+}
+
 export function resolveRequirementCourses(
   majorRequirements: MajorRequirements,
   candidateIds: string[],
-  validCourseIds?: Set<string>
+  validCourseIds?: Set<string>,
+  options: ResolveRequirementOptions = {}
 ): ResolvedRequirements {
   const uniqueCandidateIds = [...new Set(candidateIds)];
   const allRequired: string[] = [];
   const byRequirement: Record<string, string[]> = {};
   const usedChooseCourses = new Set<string>();
+  const fillDefaultsForChoose = options.fillDefaultsForChoose ?? true;
 
   for (const req of majorRequirements.requirements) {
     if (req.type === "all") {
@@ -31,7 +37,7 @@ export function resolveRequirementCourses(
     );
     const chosen = selected.slice(0, requested);
 
-    if (chosen.length < requested) {
+    if (fillDefaultsForChoose && chosen.length < requested) {
       const defaults = req.courses.filter(
         (id) =>
           !usedChooseCourses.has(id) &&

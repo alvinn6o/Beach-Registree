@@ -8,21 +8,24 @@ import { useCourseStore } from "@/stores/courseStore";
 import { useProgressStore } from "@/stores/progressStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { categoryColors } from "@/lib/colors";
-import { resolveRequirementCourses } from "graph-core";
 import type { Course, MajorRequirements } from "graph-core";
+import { resolveTrackAwareRequirementCourses } from "@/lib/trackRequirements";
 
 /** Compute course IDs that belong to a satisfied "choose N" group but weren't chosen */
 function getSatisfiedAlternatives(
   major: MajorRequirements,
+  selectedTrack: string | null,
   planned: Set<string>,
   completed: Set<string>,
   allCourseIds: Set<string>
 ): Set<string> {
   const faded = new Set<string>();
-  const resolved = resolveRequirementCourses(
+  const resolved = resolveTrackAwareRequirementCourses(
     major,
+    selectedTrack,
     [...completed, ...planned],
-    allCourseIds
+    allCourseIds,
+    { fillDefaultsForChoose: false }
   );
   for (const req of major.requirements) {
     if (req.type !== "choose" || !req.count) continue;
@@ -147,18 +150,27 @@ export default function CoursePoolSection() {
   const allCourses = useCourseStore((s) => s.allCourses);
   const completed = useProgressStore((s) => s.completed);
   const selectedElectives = useProgressStore((s) => s.selectedElectives);
+  const selectedTrack = useProgressStore((s) => s.selectedTrack);
   const plan = usePlannerStore((s) => s.plan);
 
   const scheduledIds = new Set(plan?.semesters.flatMap((s) => s.courses) ?? []);
   const allCourseIds = new Set(allCourses.map((course) => course.id));
 
   // Determine which alternatives are already satisfied by planned/completed courses
-  const satisfiedAlts = getSatisfiedAlternatives(major, scheduledIds, completed, allCourseIds);
-
-  const resolvedRequirements = resolveRequirementCourses(
+  const satisfiedAlts = getSatisfiedAlternatives(
     major,
-    [...selectedElectives, ...completed, ...scheduledIds],
+    selectedTrack,
+    scheduledIds,
+    completed,
     allCourseIds
+  );
+
+  const resolvedRequirements = resolveTrackAwareRequirementCourses(
+    major,
+    selectedTrack,
+    [...selectedElectives, ...completed, ...scheduledIds],
+    allCourseIds,
+    { fillDefaultsForChoose: false }
   );
   const requiredIds = resolvedRequirements.allRequired;
 

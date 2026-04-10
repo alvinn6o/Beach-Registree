@@ -3,18 +3,7 @@
 import { useState, useEffect } from "react";
 import { useProgressStore } from "@/stores/progressStore";
 import { useCourseStore } from "@/stores/courseStore";
-import tracksData from "../../../../../data/csulb/cs_bs_tracks.json";
-
-interface Track {
-  id: string;
-  name: string;
-  description: string;
-  color: string;
-  required?: string[];
-  electives: string[];
-}
-
-const tracks = tracksData as Track[];
+import { TRACKS } from "@/lib/trackRequirements";
 
 export default function TrackSelector() {
   const [mounted, setMounted] = useState(false);
@@ -30,8 +19,9 @@ export default function TrackSelector() {
   const activeTrack = mounted ? selectedTrack : null;
 
   function handleSelect(trackId: string) {
-    const track = tracks.find((t) => t.id === trackId);
+    const track = TRACKS.find((t) => t.id === trackId);
     if (!track) return;
+    if (selectedTrack === trackId) return;
 
     // Build set of courses belonging to the focus area requirement group
     const focusAreaCourses = new Set<string>(
@@ -40,21 +30,8 @@ export default function TrackSelector() {
         .flatMap((r) => r.courses)
     );
 
-    if (selectedTrack === trackId) {
-      // Deselect: remove this track's courses from selectedElectives
-      const trackCourses = new Set([
-        ...(track.required ?? []),
-        ...track.electives,
-      ]);
-      setSelectedElectives(
-        selectedElectives.filter((id) => !trackCourses.has(id))
-      );
-      setSelectedTrack(null);
-      return;
-    }
-
     // Remove any courses that belong to the previously selected track
-    const oldTrack = tracks.find((t) => t.id === selectedTrack);
+    const oldTrack = TRACKS.find((t) => t.id === selectedTrack);
     let current = [...selectedElectives];
     if (oldTrack) {
       const oldCourses = new Set([
@@ -82,7 +59,12 @@ export default function TrackSelector() {
   return (
     <div className="flex items-center gap-1">
       <span className="text-xs font-mono text-zinc-500 mr-1">Track:</span>
-      {tracks.map((track) => {
+      {!activeTrack && (
+        <span className="rounded-full border border-amber-800/50 bg-amber-950/20 px-2 py-1 text-[10px] font-mono text-amber-300">
+          Required
+        </span>
+      )}
+      {TRACKS.map((track) => {
         const isActive = activeTrack === track.id;
         return (
           <button
@@ -104,15 +86,6 @@ export default function TrackSelector() {
           </button>
         );
       })}
-      {activeTrack && (
-        <button
-          onClick={() => setSelectedTrack(null)}
-          className="px-1.5 py-1 text-zinc-500 hover:text-zinc-300 text-xs"
-          title="Clear track"
-        >
-          ×
-        </button>
-      )}
     </div>
   );
 }

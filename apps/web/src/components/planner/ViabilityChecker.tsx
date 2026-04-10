@@ -3,7 +3,7 @@
 import { usePlannerStore } from "@/stores/plannerStore";
 import { useProgressStore } from "@/stores/progressStore";
 import { useCourseStore } from "@/stores/courseStore";
-import { assessPlanHealth } from "graph-core";
+import { assessTrackAwarePlanHealth } from "@/lib/trackRequirements";
 
 interface ViabilityCheckerProps {
   compact?: boolean;
@@ -37,16 +37,18 @@ export default function ViabilityChecker({ compact = false }: ViabilityCheckerPr
   const preferredUnits = useProgressStore((state) => state.preferredUnits);
   const minUnitsPerSemester = useProgressStore((state) => state.minUnitsPerSemester);
   const selectedElectives = useProgressStore((state) => state.selectedElectives);
+  const selectedTrack = useProgressStore((state) => state.selectedTrack);
   const major = useCourseStore((state) => state.major);
 
   if (!plan) return null;
 
-  const report = assessPlanHealth({
+  const report = assessTrackAwarePlanHealth({
     courses,
     plan,
     completedCourseIds: [...completed],
     majorRequirements: major,
     selectedElectives,
+    selectedTrack,
     preferredUnits,
     minUnitsPerSemester,
   });

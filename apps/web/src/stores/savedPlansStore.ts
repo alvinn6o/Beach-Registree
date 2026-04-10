@@ -11,6 +11,7 @@ export interface SavedPlan {
   plan: PlanResult;
   completedCourses: string[];
   selectedElectives: string[];
+  selectedTrack?: string | null;
 }
 
 interface SavedPlansStore {
@@ -21,6 +22,7 @@ interface SavedPlansStore {
     plan: PlanResult,
     completedCourses: string[],
     selectedElectives: string[],
+    selectedTrack: string | null,
     notes?: string
   ) => string;
   loadPlan: (id: string) => SavedPlan | null;
@@ -63,7 +65,7 @@ export const useSavedPlansStore = create<SavedPlansStore>()((set, get) => ({
   savedPlans: loadSavedPlans(),
   activePlanId: loadActiveId(),
 
-  savePlan: (name, plan, completedCourses, selectedElectives, notes) => {
+  savePlan: (name, plan, completedCourses, selectedElectives, selectedTrack, notes) => {
     const id = `plan_${Date.now()}`;
     const saved: SavedPlan = {
       id,
@@ -73,6 +75,7 @@ export const useSavedPlansStore = create<SavedPlansStore>()((set, get) => ({
       plan,
       completedCourses,
       selectedElectives,
+      selectedTrack,
     };
     set((state) => {
       const next = { ...state.savedPlans, [id]: saved };

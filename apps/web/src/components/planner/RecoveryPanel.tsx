@@ -5,6 +5,7 @@ import { useCourseStore } from "@/stores/courseStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { useProgressStore } from "@/stores/progressStore";
 import { buildBlockedCourseRecoverySuggestions } from "@/lib/planner";
+import { getTrackAwareMajorRequirements } from "@/lib/trackRequirements";
 
 interface RecoveryPanelProps {
   embedded?: boolean;
@@ -17,7 +18,9 @@ export default function RecoveryPanel({ embedded = false }: RecoveryPanelProps) 
   const major = useCourseStore((state) => state.major);
   const completed = useProgressStore((state) => state.completed);
   const selectedElectives = useProgressStore((state) => state.selectedElectives);
+  const selectedTrack = useProgressStore((state) => state.selectedTrack);
   const preferredUnits = useProgressStore((state) => state.preferredUnits);
+  const trackMajor = getTrackAwareMajorRequirements(major, selectedTrack);
 
   const suggestions = useMemo(() => {
     if (!plan) return [];
@@ -25,11 +28,11 @@ export default function RecoveryPanel({ embedded = false }: RecoveryPanelProps) 
       plan.semesters,
       courses,
       [...completed],
-      major,
+      trackMajor,
       selectedElectives,
       preferredUnits
     );
-  }, [completed, courses, major, plan, preferredUnits, selectedElectives]);
+  }, [completed, courses, plan, preferredUnits, selectedElectives, trackMajor]);
 
   if (!plan || suggestions.length === 0) return null;
 
