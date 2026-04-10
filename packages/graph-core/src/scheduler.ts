@@ -95,13 +95,14 @@ function academicPhasePreference(course: Course): number {
   if (course.category === "capstone") return 0.95;
   if (course.minUnitsCompleted && course.minUnitsCompleted >= 90) return 0.9;
   if (course.minUnitsCompleted && course.minUnitsCompleted >= 60) return 0.72;
-  if (course.category === "ge-upper") return 0.72;
+  if (course.category === "ge-upper") return 0.65;
   if (course.category === "upper") return 0.62;
   if (course.category === "elective") return 0.58;
-  if (course.category === "ge") return 0.18;
-  if (course.category === "support") return level && level >= 300 ? 0.55 : 0.26;
-  if (course.category === "math") return level && level >= 300 ? 0.48 : 0.24;
-  if (course.category === "core") return level && level >= 300 ? 0.5 : 0.22;
+  // GE courses should be scheduled in the first ~40% of the plan (discovery years)
+  if (course.category === "ge") return 0.12;
+  if (course.category === "support") return level && level >= 300 ? 0.55 : 0.20;
+  if (course.category === "math") return level && level >= 300 ? 0.48 : 0.15;
+  if (course.category === "core") return level && level >= 300 ? 0.5 : 0.18;
 
   return 0.5;
 }
@@ -501,7 +502,25 @@ export function generatePlan(
   );
 
   // Step 2: Generate terms
-  const terms = generateTerms(input.currentSemester, input.targetGraduation);
+  // Instead of being hard-bounded by targetGraduation, estimate how many terms
+  // we actually need and extend if the target is too short.
+  const requestedTerms = generateTerms(input.currentSemester, input.targetGraduation);
+  const estimatedNeeded = estimateTermsNeeded(
+    remaining,
+    courseMap,
+    completedSet,
+    initiallyCompletedUnits,
+    input.unitsPerSemester
+  );
+  // Ensure we have enough terms — extend past target if necessary
+  let terms = requestedTerms;
+  if (estimatedNeeded > terms.length) {
+    let lastTerm = terms[terms.length - 1];
+    while (terms.length < estimatedNeeded + 2) {
+      lastTerm = nextTerm(lastTerm);
+      terms.push(lastTerm);
+    }
+  }
 
   // Step 3: Priority scoring
   const cpMemo = new Map<string, number>();
@@ -538,6 +557,13 @@ export function generatePlan(
     const urgencyBoost = slack <= 1 ? 14 : slack === 2 ? 7 : slack === 3 ? 3 : 0;
     // First-year required courses get a massive boost in the first 2 semesters
     const firstYearBoost = firstYearSet.has(courseId) && termIdx < 2 ? 20 : 0;
+    // GE courses get a boost in early semesters (first 40% of plan) to reflect
+    // the real pattern where students complete GEs during discovery years 1-2
+    const geEarlyBoost =
+      (course.category === "ge" || course.category === "math") &&
+      termIdx < Math.ceil(totalTerms * 0.4)
+        ? 10
+        : 0;
 
     return (
       4 * cp +
@@ -545,6 +571,7 @@ export function generatePlan(
       2 * isReq +
       urgencyBoost +
       firstYearBoost +
+      geEarlyBoost +
       phaseScore
     );
   }

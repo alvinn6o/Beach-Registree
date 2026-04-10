@@ -7,16 +7,14 @@ import { useProgressStore } from "@/stores/progressStore";
 import { buildBlockedCourseRecoverySuggestions } from "@/lib/planner";
 import TransferAssumptionsPanel from "./TransferAssumptionsPanel";
 import RecoveryPanel from "./RecoveryPanel";
-import StakeholderReportPanel from "./StakeholderReportPanel";
 import PlanInsightsPanel from "./PlanInsightsPanel";
 
-type DetailKey = "recovery" | "transfer" | "insights" | "stakeholder";
+type DetailKey = "recovery" | "transfer" | "insights";
 
 const DETAIL_LABELS: Record<DetailKey, string> = {
   recovery: "Recovery",
   transfer: "Transfer",
   insights: "Rationale",
-  stakeholder: "Presentation",
 };
 
 export default function PlannerDetailsDeck() {
@@ -47,7 +45,6 @@ export default function PlannerDetailsDeck() {
     if (isTransferStudent) sections.push("transfer");
     if (plan) {
       sections.push("insights");
-      sections.push("stakeholder");
     }
     return sections;
   }, [isTransferStudent, plan, recoveryCount]);
@@ -105,7 +102,6 @@ export default function PlannerDetailsDeck() {
               {activeSection === "recovery" && <RecoveryPanel embedded />}
               {activeSection === "transfer" && <TransferAssumptionsPanel embedded />}
               {activeSection === "insights" && <PlanInsightsPanel embedded />}
-              {activeSection === "stakeholder" && <StakeholderReportPanel embedded />}
             </div>
           </>
         )}

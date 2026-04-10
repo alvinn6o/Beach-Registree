@@ -24,6 +24,10 @@ export default function Legend() {
           <span className="text-zinc-500">Available</span>
         </span>
         <span className="flex items-center gap-1">
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#422006] border border-yellow-500/80" />
+          <span className="text-zinc-500">Planned</span>
+        </span>
+        <span className="flex items-center gap-1">
           <span className="w-2.5 h-2.5 rounded-sm bg-zinc-800/80 border border-zinc-700" />
           <span className="text-zinc-500">Locked</span>
         </span>

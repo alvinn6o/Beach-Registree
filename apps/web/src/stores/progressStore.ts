@@ -40,11 +40,13 @@ const TRANSFER_GE_COURSES = LOWER_GE_COURSES;
 // within their first calendar year at CSULB.
 const TRANSFER_LOWER_DIV_COURSES = [
   // Lower Division Core — completed before transfer
-  "CECS 105", "CECS 174", "CECS 225", "CECS 228", "CECS 229",
+  // NOTE: CECS 229 is NOT auto-completed because transfer students
+  // typically still need to take it at CSULB.
+  "CECS 105", "CECS 174", "CECS 225", "CECS 228",
   "CECS 274", "CECS 277",
   "ENGR 101", "ENGR 102",
   "MATH 122",
-  // MATH 123, PHYS 151, PHYS 152, CHEM 111A — must still be completed
+  // CECS 229, MATH 123, PHYS 151, PHYS 152, CHEM 111A — must still be completed
 ];
 
 export const TRANSFER_AUTO_COMPLETED_COURSES = [

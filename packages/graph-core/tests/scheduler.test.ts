@@ -149,8 +149,9 @@ describe("generatePlan", () => {
     expect(maxUnits - minUnitsVal).toBeLessThanOrEqual(6);
   });
 
-  it("reports errors for courses that cannot be scheduled", () => {
-    // Only 1 semester available but course chain requires 3
+  it("auto-extends semesters when target graduation is too short for prerequisite chain", () => {
+    // Only 1 semester requested but course chain requires 3 —
+    // scheduler should auto-extend and schedule all courses
     const courses = [
       course("A", 3),
       course("B", 3, ["A"]),
@@ -158,13 +159,13 @@ describe("generatePlan", () => {
     ];
     const inp = input(courses, {
       currentSemester: "Fall 2025",
-      targetGraduation: "Fall 2025", // only 1 semester
+      targetGraduation: "Fall 2025", // only 1 semester requested
     });
     const result = generatePlan(courses, inp);
 
-    // B and C cannot fit because prereqs can't be satisfied in time
-    expect(result.validation.all_requirements_met).toBe(false);
-    expect(result.validation.errors.length).toBeGreaterThan(0);
+    // Scheduler should auto-extend and successfully schedule all courses
+    expect(result.validation.all_requirements_met).toBe(true);
+    expect(result.semesters.length).toBeGreaterThanOrEqual(3);
   });
 
   it("treats OR prerequisite groups as alternatives within a single group", () => {

@@ -12,9 +12,9 @@ export const categoryColors: Record<string, { color: string; bg: string; border:
     label: "CS Core",
   },
   upper: {
-    color: "#facc15",
+    color: "#fde68a",
     bg: "#332205",
-    border: "#ca8a04",
+    border: "#d97706",
     label: "Upper Division",
   },
   elective: {

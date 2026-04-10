@@ -160,11 +160,17 @@ export default function PlannerControls() {
   const terms = ALL_TERMS;
 
   return (
-    <div className="rounded-[28px] border border-beach-border/70 bg-gradient-to-br from-beach-card/90 via-beach-card/72 to-[#11161d] p-4 shadow-[0_18px_52px_rgba(0,0,0,0.2)]">
+    <div className="rounded-[28px] border border-beach-border/70 bg-gradient-to-br from-beach-card/90 via-beach-card/72 to-[#11161d] p-4 shadow-[0_18px_52px_rgba(0,0,0,0.2)] plan-setup-highlight">
       <div className="flex flex-col items-center gap-3 text-center">
-        <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-zinc-600">
+        <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-emerald-400 animate-pulse">
           Plan Setup
         </p>
+
+        {!plan && completedCount === 0 && (
+          <p className="text-[11px] text-amber-400/80 max-w-sm leading-relaxed">
+            Tip: Go to the <span className="font-semibold text-amber-300">Course Map</span> first to mark courses you&apos;ve already completed, then come back to generate your plan.
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center justify-center gap-2 text-[11px]">
           <TransferToggle />
