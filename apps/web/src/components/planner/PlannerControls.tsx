@@ -149,6 +149,8 @@ export default function PlannerControls() {
       firstYearCourses,
     });
     setPlan(result);
+    // Trigger post-plan survey (fires once, survey checks localStorage)
+    window.dispatchEvent(new Event("beach-plan-generated"));
   }, [allCourses, major, viewMode, completed, effectiveTarget, preferredUnits, minUnitsPerSemester, selectedElectives, isTransferStudent, transferScienceChoice, setPlan]);
 
   // NOTE: We intentionally do NOT auto-regenerate the plan when viewMode changes.

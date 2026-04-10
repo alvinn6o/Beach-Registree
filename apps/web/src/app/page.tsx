@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import SurveyModal from "../components/shared/SurveyModal";
 
 /* ─── Animated Tree-Graph SVG ─── */
 function TreeGraph() {
@@ -106,6 +107,7 @@ function Star() {
 export default function LandingPage() {
   return (
     <div className="relative overflow-hidden">
+      <SurveyModal />
 
       {/* ═══════════════════ HERO ═══════════════════ */}
       <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">

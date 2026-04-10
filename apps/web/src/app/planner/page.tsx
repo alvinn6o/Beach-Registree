@@ -4,12 +4,14 @@ import { useState } from "react";
 import SemesterPlanner from "@/components/planner/SemesterPlanner";
 import SavedPlansPanel from "@/components/planner/SavedPlansPanel";
 import AppHeader from "@/components/shared/AppHeader";
+import { PostPlanSurvey } from "@/components/shared/SurveyModal";
 
 export default function PlannerPage() {
   const [showSaved, setShowSaved] = useState(false);
 
   return (
     <div className="h-screen flex flex-col bg-beach-dark">
+      <PostPlanSurvey />
       <AppHeader
         activePage="planner"
         extraControls={
