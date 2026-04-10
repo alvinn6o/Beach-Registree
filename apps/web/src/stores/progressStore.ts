@@ -46,7 +46,7 @@ const TRANSFER_LOWER_DIV_COURSES = [
   "CECS 274", "CECS 277",
   "ENGR 101", "ENGR 102",
   "MATH 122",
-  // CECS 229, MATH 123, PHYS 151, PHYS 152, CHEM 111A — must still be completed
+  // CECS 229, MATH 123, PHYS 151/CHEM 111A, BIOL Elective — must still be completed
 ];
 
 export const TRANSFER_AUTO_COMPLETED_COURSES = [

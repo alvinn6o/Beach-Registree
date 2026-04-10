@@ -118,19 +118,6 @@
     "notes": "Physical science option that also satisfies GE Area 5A / B1 and 5C / B3"
   },
   {
-    "id": "PHYS 152",
-    "name": "Electricity and Magnetism",
-    "units": 4,
-    "description": "Calculus-based physics: electricity, magnetism, optics, and waves.",
-    "prerequisites": ["PHYS 151", "MATH 123"],
-    "prerequisites_or": [],
-    "corequisites": [],
-    "semester_offered": "F/S",
-    "category": "support",
-    "min_grade": "C",
-    "notes": "Follow-on physics course sometimes used by transfer students"
-  },
-  {
     "id": "CHEM 111A",
     "name": "General Chemistry",
     "units": 5,
@@ -144,43 +131,17 @@
     "notes": "Physical science option. Catalog requires math preparation equivalent to MATH 112B or higher"
   },
   {
-    "id": "BIOL 200",
-    "name": "General Biology",
+    "id": "BIOL Elective",
+    "name": "Biology Elective",
     "units": 4,
-    "description": "Survey of major areas of biology including cell biology, genetics, evolution, anatomy, physiology, ecology, and behavior.",
+    "description": "Choose one: BIOL 200 (General Biology), BIOL 205 (Human Biology), or BIOL 207 (Human Physiology).",
     "prerequisites": [],
     "prerequisites_or": [],
     "corequisites": [],
     "semester_offered": "F/S",
     "category": "support",
     "min_grade": "C",
-    "notes": "Biological science option. Catalog says prerequisite/corequisite details should be checked directly"
-  },
-  {
-    "id": "BIOL 205",
-    "name": "Human Biology",
-    "units": 4,
-    "description": "Survey of human biology with emphasis on anatomy, physiology, development, genetics, ecology, evolution, and diversity.",
-    "prerequisites": [],
-    "prerequisites_or": [],
-    "corequisites": [],
-    "semester_offered": "F/S",
-    "category": "support",
-    "min_grade": "C",
-    "notes": "Biological science option. Catalog says prerequisite/corequisite details should be checked directly"
-  },
-  {
-    "id": "BIOL 207",
-    "name": "Human Physiology",
-    "units": 4,
-    "description": "Introduction to the functional integration of human body systems.",
-    "prerequisites": [],
-    "prerequisites_or": [],
-    "corequisites": [],
-    "semester_offered": "F/S",
-    "category": "support",
-    "min_grade": "C",
-    "notes": "Biological science option. Catalog says prerequisite/corequisite details should be checked directly"
+    "notes": "One biology course required (BIOL 200, 205, or 207). Check catalog for current options."
   },
   {
     "id": "ENGR 101",

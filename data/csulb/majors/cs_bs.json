@@ -21,10 +21,9 @@
       "courses": ["PHYS 151", "CHEM 111A"]
     },
     {
-      "name": "Life Science",
-      "type": "choose",
-      "count": 1,
-      "courses": ["BIOL 200", "BIOL 205", "BIOL 207"]
+      "name": "Biology Elective",
+      "type": "all",
+      "courses": ["BIOL Elective"]
     },
     {
       "name": "Upper Division Core",

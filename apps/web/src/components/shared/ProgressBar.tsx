@@ -16,7 +16,7 @@ export default function ProgressBar() {
       // In major mode, skip GE and support courses
       if (viewMode === "major") {
         const nonGe = req.courses.filter(
-          (id) => !id.startsWith("GE-") && !["PHYS 151", "PHYS 152", "ENGR 350"].includes(id)
+          (id) => !id.startsWith("GE-") && !["PHYS 151", "CHEM 111A", "BIOL Elective", "ENGR 350"].includes(id)
         );
         allRequired.push(...nonGe);
       } else {

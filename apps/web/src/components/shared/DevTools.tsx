@@ -18,7 +18,7 @@ const LOWER_DIV_CORE = [
   "MATH 122", "MATH 123",
 ];
 
-const SCIENCE = ["PHYS 151", "PHYS 152", "CHEM 111A"];
+const SCIENCE = ["PHYS 151", "CHEM 111A", "BIOL Elective"];
 
 type GroupKey = "lowerGE" | "upperGE" | "lowerCore" | "science";
 
