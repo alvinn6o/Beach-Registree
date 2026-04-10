@@ -3,28 +3,34 @@
 import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { getPlacementHint, summarizePlacementErrors } from "@/lib/planner";
 import { useCourseStore } from "@/stores/courseStore";
 import { useProgressStore } from "@/stores/progressStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { categoryColors } from "@/lib/colors";
+import { resolveRequirementCourses } from "graph-core";
 import type { Course, MajorRequirements } from "graph-core";
 
 /** Compute course IDs that belong to a satisfied "choose N" group but weren't chosen */
 function getSatisfiedAlternatives(
   major: MajorRequirements,
   planned: Set<string>,
-  completed: Set<string>
+  completed: Set<string>,
+  allCourseIds: Set<string>
 ): Set<string> {
   const faded = new Set<string>();
+  const resolved = resolveRequirementCourses(
+    major,
+    [...completed, ...planned],
+    allCourseIds
+  );
   for (const req of major.requirements) {
     if (req.type !== "choose" || !req.count) continue;
-    const chosen = req.courses.filter(
-      (id) => planned.has(id) || completed.has(id)
-    );
+    const chosen = resolved.byRequirement[req.name] ?? [];
     if (chosen.length >= req.count) {
       // Requirement satisfied — fade unchosen alternatives
       for (const id of req.courses) {
-        if (!planned.has(id) && !completed.has(id)) {
+        if (!chosen.includes(id) && !planned.has(id) && !completed.has(id)) {
           faded.add(id);
         }
       }
@@ -55,7 +61,15 @@ const CATEGORY_ORDER = [
   "support",
 ];
 
-function PoolCard({ course, isSatisfied }: { course: Course; isSatisfied?: boolean }) {
+function PoolCard({
+  course,
+  isSatisfied,
+  hint,
+}: {
+  course: Course;
+  isSatisfied?: boolean;
+  hint?: { earliestValidTerm: string | null; blockingReason: string };
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `${course.id}::pool`,
@@ -83,7 +97,11 @@ function PoolCard({ course, isSatisfied }: { course: Course; isSatisfied?: boole
       title={
         isSatisfied
           ? `${course.id} — requirement already satisfied by another choice`
-          : `${course.id} — ${course.name} (${course.units}u)`
+          : hint?.earliestValidTerm
+            ? `${course.id} — earliest valid term: ${hint.earliestValidTerm}`
+            : hint?.blockingReason
+              ? `${course.id} — ${hint.blockingReason}`
+              : `${course.id} — ${course.name} (${course.units}u)`
       }
     >
       <div className="flex items-center justify-between mb-0.5">
@@ -99,6 +117,11 @@ function PoolCard({ course, isSatisfied }: { course: Course; isSatisfied?: boole
               satisfied
             </span>
           )}
+          {!isSatisfied && hint?.earliestValidTerm && (
+            <span className="text-[8px] font-mono text-blue-400/70 bg-blue-950/20 px-1 py-0.5 rounded border border-blue-900/30">
+              {hint.earliestValidTerm}
+            </span>
+          )}
           <span className="text-[9px] font-mono text-zinc-600 bg-beach-card px-1.5 py-0.5 rounded">
             {course.units}u
           </span>
@@ -107,6 +130,11 @@ function PoolCard({ course, isSatisfied }: { course: Course; isSatisfied?: boole
       <p className="text-[10px] text-zinc-500 truncate leading-snug max-w-[120px]">
         {course.name}
       </p>
+      {!isSatisfied && !hint?.earliestValidTerm && hint?.blockingReason && (
+        <p className="text-[9px] text-red-300/75 mt-1 leading-tight line-clamp-2">
+          {hint.blockingReason}
+        </p>
+      )}
     </div>
   );
 }
@@ -116,32 +144,47 @@ export default function CoursePoolSection() {
 
   const major = useCourseStore((s) => s.major);
   const getCourse = useCourseStore((s) => s.getCourse);
+  const allCourses = useCourseStore((s) => s.allCourses);
   const completed = useProgressStore((s) => s.completed);
   const selectedElectives = useProgressStore((s) => s.selectedElectives);
   const plan = usePlannerStore((s) => s.plan);
 
   const scheduledIds = new Set(plan?.semesters.flatMap((s) => s.courses) ?? []);
+  const allCourseIds = new Set(allCourses.map((course) => course.id));
 
   // Determine which alternatives are already satisfied by planned/completed courses
-  const satisfiedAlts = getSatisfiedAlternatives(major, scheduledIds, completed);
+  const satisfiedAlts = getSatisfiedAlternatives(major, scheduledIds, completed, allCourseIds);
 
-  // Collect required course IDs from major requirements
-  const requiredIds = major.requirements.flatMap((req) => {
-    if (req.type === "all") return req.courses;
-    if (req.type === "choose") {
-      const selected = req.courses.filter((id) =>
-        selectedElectives.includes(id)
-      );
-      return selected.length > 0 ? selected : req.courses;
-    }
-    return [];
-  });
+  const resolvedRequirements = resolveRequirementCourses(
+    major,
+    [...selectedElectives, ...completed, ...scheduledIds],
+    allCourseIds
+  );
+  const requiredIds = resolvedRequirements.allRequired;
 
   // Deduplicate and filter to unscheduled, uncompleted
   const poolCourses = [...new Set(requiredIds)]
     .filter((id) => !completed.has(id) && !scheduledIds.has(id))
     .map((id) => getCourse(id))
     .filter((c): c is Course => c !== undefined);
+  const completedList = [...completed];
+  const placementHints = new Map(
+    poolCourses.map((course) => {
+      const hint = getPlacementHint(
+        course.id,
+        plan?.semesters ?? [],
+        allCourses,
+        completedList
+      );
+      return [
+        course.id,
+        {
+          earliestValidTerm: hint.earliestValidTerm,
+          blockingReason: summarizePlacementErrors(hint.blockingErrors),
+        },
+      ];
+    })
+  );
 
   if (poolCourses.length === 0) return null;
 
@@ -204,7 +247,12 @@ export default function CoursePoolSection() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {courses.map((course) => (
-                  <PoolCard key={course.id} course={course} isSatisfied={satisfiedAlts.has(course.id)} />
+                  <PoolCard
+                    key={course.id}
+                    course={course}
+                    isSatisfied={satisfiedAlts.has(course.id)}
+                    hint={placementHints.get(course.id)}
+                  />
                 ))}
               </div>
             </div>

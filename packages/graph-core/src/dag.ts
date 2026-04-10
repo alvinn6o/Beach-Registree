@@ -67,6 +67,21 @@ export function computeLayers(courses: Course[]): Map<string, number> {
   return depth;
 }
 
+export function getCompletedUnits(
+  courses: Course[],
+  completedSet: Set<string>
+): number {
+  return courses.reduce((sum, course) => {
+    return sum + (completedSet.has(course.id) ? course.units : 0);
+  }, 0);
+}
+
+export function isTermOffered(course: Course, term: string): boolean {
+  if (course.semester_offered === "F/S") return true;
+  const isFall = term.startsWith("Fall");
+  return course.semester_offered === (isFall ? "F" : "S");
+}
+
 export function isPrereqMet(
   course: Course,
   completedSet: Set<string>
@@ -76,16 +91,28 @@ export function isPrereqMet(
   }
 
   if (course.prerequisites_or.length > 0) {
-    let satisfied = false;
     for (const group of course.prerequisites_or) {
-      if (group.every((p) => completedSet.has(p))) {
-        satisfied = true;
-        break;
-      }
+      if (!group.some((p) => completedSet.has(p))) return false;
     }
-    if (!satisfied) return false;
   }
 
+  return true;
+}
+
+export function isStandingMet(
+  course: Course,
+  completedUnits: number
+): boolean {
+  return completedUnits >= (course.minUnitsCompleted ?? 0);
+}
+
+export function isCourseEligible(
+  course: Course,
+  completedSet: Set<string>,
+  completedUnits: number
+): boolean {
+  if (!isPrereqMet(course, completedSet)) return false;
+  if (!isStandingMet(course, completedUnits)) return false;
   return true;
 }
 
@@ -97,7 +124,10 @@ export function getStatus(
   if (completedSet.has(courseId)) return "completed";
   const course = courses.find((c) => c.id === courseId);
   if (!course) return "locked";
-  return isPrereqMet(course, completedSet) ? "available" : "locked";
+  const completedUnits = getCompletedUnits(courses, completedSet);
+  return isCourseEligible(course, completedSet, completedUnits)
+    ? "available"
+    : "locked";
 }
 
 export function getPathTo(

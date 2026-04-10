@@ -72,32 +72,22 @@
     {
       "name": "GE: Area A — Communication",
       "type": "all",
-      "courses": ["GE-A1", "GE-A2", "GE-A3"]
-    },
-    {
-      "name": "GE: Area B — Science & Math",
-      "type": "all",
-      "courses": ["GE-B1", "GE-B2", "GE-B3", "GE-B5"]
+      "courses": ["GE-A1", "GE-A2"]
     },
     {
       "name": "GE: Area C — Arts & Humanities",
       "type": "all",
-      "courses": ["GE-C1", "GE-C2", "GE-C3"]
+      "courses": ["GE-C1", "GE-C2"]
     },
     {
       "name": "GE: Area D — Social Sciences",
       "type": "all",
-      "courses": ["GE-D1", "GE-D2", "GE-D3", "GE-D4"]
+      "courses": ["GE-D1", "GE-D2"]
     },
     {
-      "name": "GE: Area E & F",
+      "name": "GE: Ethnic Studies & Upper Division",
       "type": "all",
-      "courses": ["GE-E", "GE-F"]
-    },
-    {
-      "name": "GE: Upper Division",
-      "type": "all",
-      "courses": ["GE-UD-B", "GE-UD-C", "GE-UD-D"]
+      "courses": ["GE-F", "GE-UD-D"]
     }
   ]
 }

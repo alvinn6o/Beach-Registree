@@ -191,15 +191,15 @@ export default function CourseGraph({ onSelectCourse, selectedCourse }: CourseGr
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
 
       const scaleFactor = e.deltaY > 0 ? 0.92 : 1.08;
       const newK = Math.min(Math.max(transform.k * scaleFactor, 0.2), 3);
 
       setTransform((prev) => ({
-        x: mouseX - (mouseX - prev.x) * (newK / prev.k),
-        y: mouseY - (mouseY - prev.y) * (newK / prev.k),
+        x: centerX - (centerX - prev.x) * (newK / prev.k),
+        y: centerY - (centerY - prev.y) * (newK / prev.k),
         k: newK,
       }));
     },

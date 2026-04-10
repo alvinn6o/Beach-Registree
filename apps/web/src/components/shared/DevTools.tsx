@@ -4,14 +4,13 @@ import { useState } from "react";
 import { useProgressStore } from "@/stores/progressStore";
 
 const LOWER_GE = [
-  "GE-A1", "GE-A2", "GE-A3",
-  "GE-B1", "GE-B2", "GE-B3", "GE-B4", "GE-B5",
-  "GE-C1", "GE-C2", "GE-C3",
-  "GE-D1", "GE-D2", "GE-D3", "GE-D4",
-  "GE-E", "GE-F",
+  "GE-A1", "GE-A2",
+  "GE-C1", "GE-C2",
+  "GE-D1", "GE-D2",
+  "GE-F",
 ];
 
-const UPPER_GE = ["GE-UD-B", "GE-UD-C", "GE-UD-D"];
+const UPPER_GE = ["GE-UD-D"];
 
 const LOWER_DIV_CORE = [
   "CECS 105", "CECS 174", "CECS 225", "CECS 228", "CECS 229",

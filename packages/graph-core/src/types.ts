@@ -10,6 +10,7 @@ export interface Course {
   category: "math" | "core" | "upper" | "elective" | "capstone" | "ge" | "ge-upper" | "support";
   min_grade: string;
   notes: string;
+  minUnitsCompleted?: number;
 }
 
 export type CourseStatus = "completed" | "available" | "locked";

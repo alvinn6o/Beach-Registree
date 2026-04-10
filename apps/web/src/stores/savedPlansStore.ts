@@ -6,6 +6,7 @@ import type { PlanResult } from "graph-core";
 export interface SavedPlan {
   id: string;
   name: string;
+  notes?: string;
   savedAt: string; // ISO string
   plan: PlanResult;
   completedCourses: string[];
@@ -15,10 +16,17 @@ export interface SavedPlan {
 interface SavedPlansStore {
   savedPlans: Record<string, SavedPlan>;
   activePlanId: string | null;
-  savePlan: (name: string, plan: PlanResult, completedCourses: string[], selectedElectives: string[]) => string;
+  savePlan: (
+    name: string,
+    plan: PlanResult,
+    completedCourses: string[],
+    selectedElectives: string[],
+    notes?: string
+  ) => string;
   loadPlan: (id: string) => SavedPlan | null;
   deletePlan: (id: string) => void;
   renamePlan: (id: string, name: string) => void;
+  updatePlanNotes: (id: string, notes: string) => void;
   setActivePlanId: (id: string | null) => void;
 }
 
@@ -55,11 +63,12 @@ export const useSavedPlansStore = create<SavedPlansStore>()((set, get) => ({
   savedPlans: loadSavedPlans(),
   activePlanId: loadActiveId(),
 
-  savePlan: (name, plan, completedCourses, selectedElectives) => {
+  savePlan: (name, plan, completedCourses, selectedElectives, notes) => {
     const id = `plan_${Date.now()}`;
     const saved: SavedPlan = {
       id,
       name,
+      notes: notes?.trim() || undefined,
       savedAt: new Date().toISOString(),
       plan,
       completedCourses,
@@ -99,6 +108,20 @@ export const useSavedPlansStore = create<SavedPlansStore>()((set, get) => ({
       const next = {
         ...state.savedPlans,
         [id]: { ...state.savedPlans[id], name },
+      };
+      persist(next);
+      return { savedPlans: next };
+    }),
+
+  updatePlanNotes: (id, notes) =>
+    set((state) => {
+      if (!state.savedPlans[id]) return state;
+      const next = {
+        ...state.savedPlans,
+        [id]: {
+          ...state.savedPlans[id],
+          notes: notes.trim() || undefined,
+        },
       };
       persist(next);
       return { savedPlans: next };

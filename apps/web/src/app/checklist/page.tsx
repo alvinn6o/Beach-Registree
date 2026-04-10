@@ -1,11 +1,10 @@
 "use client";
 
+import { resolveRequirementCourses } from "graph-core";
 import { useCourseStore } from "@/stores/courseStore";
 import { useProgressStore } from "@/stores/progressStore";
 import { usePlannerStore } from "@/stores/plannerStore";
-import TrackSelector from "@/components/graph/TrackSelector";
-import DevTools from "@/components/shared/DevTools";
-import Link from "next/link";
+import AppHeader from "@/components/shared/AppHeader";
 import tracksData from "../../../../../data/csulb/cs_bs_tracks.json";
 
 interface Track {
@@ -48,6 +47,11 @@ export default function ChecklistPage() {
     : null;
 
   const plannedIds = new Set(plan?.semesters.flatMap((s) => s.courses) ?? []);
+  const resolvedRequirements = resolveRequirementCourses(
+    major,
+    [...selectedElectives, ...completed, ...plannedIds],
+    new Set(allCourses.map((course) => course.id))
+  );
 
   function getCourseStatus(courseId: string): CourseStatus {
     if (completed.has(courseId)) return "completed";
@@ -70,13 +74,7 @@ export default function ChecklistPage() {
   for (const req of major.requirements) {
     let courseIds: string[];
     if (req.type === "choose") {
-      // Merge: selected electives + completed + planned from this group
-      const fromElectives = selectedElectives.filter((id) => req.courses.includes(id));
-      const fromCompleted = req.courses.filter((id) => completed.has(id));
-      const fromPlanned = req.courses.filter((id) => plannedIds.has(id));
-      const merged = [...new Set([...fromElectives, ...fromCompleted, ...fromPlanned])];
-      // Fallback: if nothing selected/completed/planned, show first N defaults
-      courseIds = merged.length > 0 ? merged : req.courses.slice(0, req.count ?? req.courses.length);
+      courseIds = resolvedRequirements.byRequirement[req.name] ?? [];
     } else {
       courseIds = req.courses;
     }
@@ -121,50 +119,22 @@ export default function ChecklistPage() {
       reqProgress += req.courses.filter((id) => completed.has(id)).length;
     } else if (req.type === "choose" && req.count) {
       reqTotal += req.count;
-      reqProgress += Math.min(req.count, req.courses.filter((id) => completed.has(id)).length);
+      const allocated = resolvedRequirements.byRequirement[req.name] ?? [];
+      reqProgress += allocated.filter((id) => completed.has(id)).length;
     }
   }
   const pct = reqTotal > 0 ? Math.round((reqProgress / reqTotal) * 100) : 0;
 
   return (
     <div className="h-screen flex flex-col bg-beach-dark">
-      {/* Top bar */}
-      <header className="flex items-center justify-between px-4 py-2.5 border-b border-beach-border glass">
-        <div className="flex items-center gap-5">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-base font-display text-zinc-200 group-hover:text-zinc-50 transition-colors">
-              Beach RegisTree
-            </span>
-          </Link>
-          <nav className="flex items-center gap-0.5 bg-beach-dark/50 rounded-lg p-0.5">
-            {[
-              { href: "/graph", label: "Prerequisite Map", active: false },
-              { href: "/planner", label: "Plan My Degree", active: false },
-              { href: "/checklist", label: "Checklist", active: true },
-            ].map(({ href, label, active }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  active
-                    ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-        <div className="flex items-center gap-3">
-          <TrackSelector />
-          <div className="w-px h-5 bg-beach-border" />
-          <DevTools />
+      <AppHeader
+        activePage="checklist"
+        extraControls={
           <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
             {major.catalog_year} Catalog
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 py-8">

@@ -12,19 +12,19 @@ export default function Legend() {
     : Object.keys(categoryColors);
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px]">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px]">
       <div className="flex items-center gap-2.5">
         <span className="text-zinc-600 font-mono uppercase tracking-widest">Status</span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-sm bg-emerald-900/80 border border-emerald-500/80" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-emerald-900/80 border border-emerald-500/80" />
           <span className="text-zinc-500">Done</span>
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-sm bg-blue-900/40 border border-blue-500/60" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-sky-950/60 border border-sky-500/70" />
           <span className="text-zinc-500">Available</span>
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-sm bg-zinc-800/80 border border-zinc-700" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-zinc-800/80 border border-zinc-700" />
           <span className="text-zinc-500">Locked</span>
         </span>
       </div>
@@ -47,12 +47,16 @@ export default function Legend() {
           const val = categoryColors[key];
           if (!val) return null;
           return (
-            <span key={key} className="flex items-center gap-1">
+            <span
+              key={key}
+              className="flex items-center gap-1 rounded-full border px-2 py-1"
+              style={{ borderColor: `${val.border}55`, backgroundColor: `${val.bg}` }}
+            >
               <span
-                className="w-2 h-2 rounded-sm"
+                className="w-2.5 h-2.5 rounded-sm"
                 style={{ backgroundColor: val.bg, border: `1px solid ${val.border}` }}
               />
-              <span className="text-zinc-500">{val.label}</span>
+              <span style={{ color: val.color }}>{val.label}</span>
             </span>
           );
         })}

@@ -19,37 +19,37 @@
     "description": "Introduction to basic concepts of computer science and fundamental techniques for solving problems using the Python programming language.",
     "prerequisites": [],
     "prerequisites_or": [],
-    "corequisites": [],
+    "corequisites": ["MATH 122"],
     "semester_offered": "F/S",
     "category": "core",
     "min_grade": "C",
-    "notes": "Corequisite: CECS 180 or MATH 122"
+    "notes": "Must be completed within the first year. CS path uses MATH 122 as the corequisite option."
   },
   {
     "id": "CECS 225",
     "name": "Digital Logic and Assembly Programming",
     "units": 3,
     "description": "Number representation, digital logic, Boolean algebra and logic gates, combinatorial building blocks, latches and flip-flops, arithmetic circuits, memory system organization, machine and assembly language programming, and MIPS architecture.",
-    "prerequisites": ["CECS 174"],
+    "prerequisites": [],
     "prerequisites_or": [],
-    "corequisites": [],
+    "corequisites": ["CECS 174"],
     "semester_offered": "F/S",
     "category": "core",
     "min_grade": "C",
-    "notes": "Corequisite: CECS 174 (can be taken concurrently)"
+    "notes": "CS-only course. Official flowchart lists CECS 174 as a corequisite."
   },
   {
     "id": "CECS 228",
     "name": "Discrete Structures with Computing Applications",
     "units": 3,
     "description": "Introduction to discrete mathematics with applications towards computing. Topics include sets, functions, logic, relations, graphs, trees, recursion, combinatorics, and mathematical reasoning.",
-    "prerequisites": ["CECS 174"],
-    "prerequisites_or": [["MATH 170"], ["MATH 122"]],
+    "prerequisites": ["CECS 174", "MATH 122"],
+    "prerequisites_or": [],
     "corequisites": [],
     "semester_offered": "F/S",
     "category": "core",
     "min_grade": "C",
-    "notes": "Requires CECS 174 AND (MATH 170 or MATH 122)"
+    "notes": "CS-only path uses CECS 174 and MATH 122 before CECS 228."
   },
   {
     "id": "CECS 229",
@@ -309,7 +309,8 @@
     "semester_offered": "F/S",
     "category": "elective",
     "min_grade": "C",
-    "notes": "Requires completion of at least 60 units"
+    "notes": "Eligible after upper-division standing.",
+    "minUnitsCompleted": 60
   },
   {
     "id": "CECS 428",
@@ -330,7 +331,7 @@
     "units": 3,
     "description": "Models, algorithms, and evaluation of the retrieval of information from a collection of documents. Document preprocessing. Indexing and searching. Retrieval evaluation. Search engines.",
     "prerequisites": ["CECS 328"],
-    "prerequisites_or": [["CECS 381"], ["E E 381"]],
+    "prerequisites_or": [["CECS 381", "E E 381"]],
     "corequisites": [],
     "semester_offered": "S",
     "category": "elective",
@@ -447,7 +448,7 @@
     "units": 3,
     "description": "Introduction to machine learning and its applications, including supervised, unsupervised learning and deep learning. Regression, classification and neural networks.",
     "prerequisites": [],
-    "prerequisites_or": [["CECS 381"], ["E E 381"]],
+    "prerequisites_or": [["CECS 381", "E E 381"]],
     "corequisites": [],
     "semester_offered": "S",
     "category": "elective",
@@ -473,7 +474,7 @@
     "units": 3,
     "description": "Foundational and advanced deep learning concepts. Neural networks, backpropagation, specialized neural network architectures, deep reinforcement learning, and large language models.",
     "prerequisites": [],
-    "prerequisites_or": [["CECS 381"], ["E E 381"]],
+    "prerequisites_or": [["CECS 381", "E E 381"]],
     "corequisites": [],
     "semester_offered": "S",
     "category": "elective",

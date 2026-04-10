@@ -22,8 +22,8 @@ export default function TransferToggle() {
       }`}
       title={
         isTransfer
-          ? "Transfer: lower-division GE marked complete"
-          : "Mark as transfer student (completes GE)"
+          ? "Transfer planning mode is on"
+          : "Turn on transfer planning mode"
       }
     >
       <span
@@ -31,7 +31,7 @@ export default function TransferToggle() {
           isTransfer ? "border-amber-400 bg-amber-400" : "border-zinc-600"
         }`}
       />
-      Transfer
+      Transfer Mode
     </button>
   );
 }

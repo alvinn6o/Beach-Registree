@@ -90,6 +90,11 @@ export default function CoursePanel({ courseId, onClose }: CoursePanelProps) {
           </span>
           <span className="text-[10px] text-zinc-600 font-mono">{course.units}u</span>
           <span className="text-[10px] text-zinc-600 font-mono">{semesterLabel}</span>
+          {course.minUnitsCompleted && (
+            <span className="text-[10px] text-amber-400/80 font-mono">
+              {course.minUnitsCompleted}+ units
+            </span>
+          )}
         </div>
 
         <button

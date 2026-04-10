@@ -4,9 +4,10 @@ import { useCallback, useState } from "react";
 import { useProgressStore } from "@/stores/progressStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { useCourseStore } from "@/stores/courseStore";
-import { generatePlan } from "graph-core";
-import { DEFAULT_UNITS, MIN_UNITS, MAX_UNITS } from "@/lib/constants";
+import { assessPlanHealth, generatePlan, resolveRequirementCourses } from "graph-core";
+import { MIN_UNITS, MAX_UNITS } from "@/lib/constants";
 import type { StudentYear } from "@/stores/progressStore";
+import TransferToggle from "@/components/shared/TransferToggle";
 
 /** Returns the NEXT upcoming semester (not the current one in progress).
  *  If we're in Spring 2026, planning starts from Fall 2026.
@@ -52,15 +53,14 @@ const YEAR_SEMESTER_COUNT: Record<StudentYear, number> = {
 };
 
 const YEAR_OPTIONS: { value: StudentYear; label: string }[] = [
-  { value: "Freshman", label: "Freshman (8 sem)" },
-  { value: "Sophomore", label: "Sophomore (6 sem)" },
-  { value: "Junior", label: "Junior (4 sem)" },
-  { value: "Senior", label: "Senior (2 sem)" },
+  { value: "Freshman", label: "Freshman" },
+  { value: "Sophomore", label: "Sophomore" },
+  { value: "Junior", label: "Junior" },
+  { value: "Senior", label: "Senior" },
 ];
 
 export default function PlannerControls() {
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const courses = useCourseStore((s) => s.courses);
   const allCourses = useCourseStore((s) => s.allCourses);
   const major = useCourseStore((s) => s.major);
   const viewMode = useCourseStore((s) => s.viewMode);
@@ -71,6 +71,7 @@ export default function PlannerControls() {
   const selectedElectives = useProgressStore((s) => s.selectedElectives);
   const studentYear = useProgressStore((s) => s.studentYear);
   const isTransferStudent = useProgressStore((s) => s.isTransferStudent);
+  const transferScienceChoice = useProgressStore((s) => s.transferScienceChoice);
   const setTargetGraduation = useProgressStore((s) => s.setTargetGraduation);
   const setPreferredUnits = useProgressStore((s) => s.setPreferredUnits);
   const setMinUnitsPerSemester = useProgressStore((s) => s.setMinUnitsPerSemester);
@@ -78,6 +79,32 @@ export default function PlannerControls() {
   const plan = usePlannerStore((s) => s.plan);
   const setPlan = usePlannerStore((s) => s.setPlan);
   const clearPlan = usePlannerStore((s) => s.clearPlan);
+  const completedCount = completed.size;
+  const report = plan
+    ? assessPlanHealth({
+        courses: allCourses,
+        plan,
+        completedCourseIds: [...completed],
+        majorRequirements: major,
+        selectedElectives,
+        preferredUnits,
+        minUnitsPerSemester,
+      })
+    : null;
+  const statusLabel = report
+    ? report.status === "on-track"
+      ? "On Track"
+      : report.status === "needs-review"
+        ? "Needs Review"
+        : "Blocked"
+    : null;
+  const statusTone = report
+    ? report.status === "on-track"
+      ? "border-emerald-900/50 bg-emerald-950/25 text-emerald-200"
+      : report.status === "needs-review"
+        ? "border-amber-900/50 bg-amber-950/25 text-amber-200"
+        : "border-red-900/50 bg-red-950/25 text-red-200"
+    : "";
 
   // Compute effective target graduation based on student year selection
   // Always ensure graduation lands on a Spring semester
@@ -95,10 +122,21 @@ export default function PlannerControls() {
   const handleGenerate = useCallback(() => {
     // Always use allCourses so GE + support courses get scheduled regardless of viewMode
     const coursesToUse = allCourses;
+    const resolved = resolveRequirementCourses(
+      major,
+      selectedElectives,
+      new Set(coursesToUse.map((course) => course.id))
+    );
+    const transferFirstYear = [
+      "MATH 123",
+      ...(transferScienceChoice
+        ? [transferScienceChoice]
+        : (resolved.byRequirement["Physical Science"] ?? []).slice(0, 1)),
+    ];
     // First-year course requirements (must be completed within first 2 semesters)
     const firstYearCourses = isTransferStudent
-      ? ["MATH 123"] // Transfer: MATH 123 + science (handled by elective selection)
-      : ["CECS 174", "MATH 122"]; // Freshman: CECS 174 + MATH 122
+      ? transferFirstYear
+      : ["CECS 174", "MATH 122", "ENGR 101"];
     const result = generatePlan(coursesToUse, {
       completedCourses: [...completed],
       majorRequirements: major,
@@ -111,7 +149,7 @@ export default function PlannerControls() {
       firstYearCourses,
     });
     setPlan(result);
-  }, [courses, allCourses, major, viewMode, completed, effectiveTarget, preferredUnits, minUnitsPerSemester, selectedElectives, isTransferStudent, setPlan]);
+  }, [allCourses, major, viewMode, completed, effectiveTarget, preferredUnits, minUnitsPerSemester, selectedElectives, isTransferStudent, transferScienceChoice, setPlan]);
 
   // NOTE: We intentionally do NOT auto-regenerate the plan when viewMode changes.
   // The plan uses allCourses regardless of viewMode, and regenerating would
@@ -120,111 +158,155 @@ export default function PlannerControls() {
   const terms = ALL_TERMS;
 
   return (
-    <div className="flex items-center gap-4 flex-wrap">
-      {/* Student Year Selector */}
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-mono text-zinc-500">Year:</label>
-        <select
-          value={studentYear ?? ""}
-          onChange={(e) => setStudentYear((e.target.value as StudentYear) || null)}
-          className="bg-beach-card border border-beach-border rounded px-2 py-1 text-sm font-mono text-zinc-300 focus:outline-none focus:border-blue-500"
-        >
-          <option value="">Any</option>
-          {YEAR_OPTIONS.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+    <div className="rounded-[28px] border border-beach-border/70 bg-gradient-to-br from-beach-card/90 via-beach-card/72 to-[#11161d] p-4 shadow-[0_18px_52px_rgba(0,0,0,0.2)]">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-zinc-600">
+          Plan Setup
+        </p>
+
+        <div className="flex flex-wrap items-center justify-center gap-2 text-[11px]">
+          <TransferToggle />
+          <span className="rounded-full border border-beach-border bg-beach-dark/70 px-3 py-1.5 text-zinc-400">
+            {completedCount} complete
+          </span>
+          <span className="rounded-full border border-beach-border bg-beach-dark/70 px-3 py-1.5 text-zinc-400">
+            {selectedElectives.length} custom picks
+          </span>
+          {plan && (
+            <span className="rounded-full border border-blue-900/40 bg-blue-950/20 px-3 py-1.5 text-blue-300">
+              Draft generated
+            </span>
+          )}
+          {statusLabel && (
+            <span className={`rounded-full border px-3 py-1.5 ${statusTone}`}>
+              {statusLabel}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Target Graduation — hidden when year is set (auto-computed) */}
-      {!studentYear && (
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-mono text-zinc-500">Target:</label>
-          <select
-            value={targetGraduation}
-            onChange={(e) => setTargetGraduation(e.target.value)}
-            className="bg-beach-card border border-beach-border rounded px-2 py-1 text-sm font-mono text-zinc-300 focus:outline-none focus:border-blue-500"
-          >
-            {terms.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* When year is selected, show computed target */}
-      {studentYear && (
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-mono text-zinc-600">→</span>
-          <span className="text-xs font-mono text-zinc-400">{effectiveTarget}</span>
-        </div>
-      )}
-
-      {/* Advanced settings (collapsed by default) */}
-      {showAdvanced && (
-        <>
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-mono text-zinc-500">Min units:</label>
-            <input
-              type="range"
-              min={6}
-              max={15}
-              value={minUnitsPerSemester}
-              onChange={(e) => setMinUnitsPerSemester(Number(e.target.value))}
-              className="w-16 accent-amber-500"
-            />
-            <span className="text-sm font-mono text-amber-400 w-6">
-              {minUnitsPerSemester}
-            </span>
+      <div className="mt-4 grid gap-3 lg:grid-cols-3">
+        <div className="rounded-2xl border border-beach-border/70 bg-beach-dark/35 p-3 text-center">
+          <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-600">Student stage</p>
+          <div className="mt-2">
+            <select
+              value={studentYear ?? ""}
+              onChange={(e) => setStudentYear((e.target.value as StudentYear) || null)}
+              className="w-full rounded-xl border border-beach-border bg-beach-card px-3 py-2 text-center text-sm text-zinc-200 focus:border-blue-500 focus:outline-none"
+            >
+              <option value="">Estimate automatically</option>
+              {YEAR_OPTIONS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-[11px] text-zinc-500">
+              {studentYear
+                ? `Target: ${effectiveTarget}`
+                : "Optional timeline estimate"}
+            </p>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-mono text-zinc-500">Max units:</label>
-            <input
-              type="range"
-              min={MIN_UNITS}
-              max={MAX_UNITS}
-              value={preferredUnits}
-              onChange={(e) => setPreferredUnits(Number(e.target.value))}
-              className="w-16 accent-blue-500"
-            />
-            <span className="text-sm font-mono text-zinc-300 w-6">
-              {preferredUnits}
-            </span>
-            {preferredUnits > 18 && (
-              <span className="text-[9px] text-orange-400 font-mono bg-orange-900/20 px-1.5 py-0.5 rounded border border-orange-800/30">
-                Requires approval
-              </span>
+        <div className="rounded-2xl border border-beach-border/70 bg-beach-dark/35 p-3 text-center">
+          <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-600">Graduation target</p>
+          <div className="mt-2">
+            {!studentYear ? (
+              <select
+                value={targetGraduation}
+                onChange={(e) => setTargetGraduation(e.target.value)}
+                className="w-full rounded-xl border border-beach-border bg-beach-card px-3 py-2 text-center text-sm text-zinc-200 focus:border-blue-500 focus:outline-none"
+              >
+                {terms.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="rounded-xl border border-blue-900/40 bg-blue-950/20 px-3 py-2 text-sm text-blue-200">
+                {effectiveTarget}
+              </div>
             )}
+            <p className="mt-2 text-[11px] text-zinc-500">Shorter targets increase load.</p>
           </div>
-        </>
+        </div>
+
+        <div className="rounded-2xl border border-beach-border/70 bg-beach-dark/35 p-3 text-center">
+          <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-600">Unit strategy</p>
+          <div className="mt-2 flex items-center gap-3">
+            <div className="flex-1">
+              <label className="text-[11px] text-zinc-500">Target max: {preferredUnits}u</label>
+              <input
+                type="range"
+                min={MIN_UNITS}
+                max={MAX_UNITS}
+                value={preferredUnits}
+                onChange={(e) => setPreferredUnits(Number(e.target.value))}
+                className="mt-2 w-full accent-blue-500"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-[11px] text-zinc-500">Full-time floor: {minUnitsPerSemester}u</label>
+              <input
+                type="range"
+                min={6}
+                max={15}
+                value={minUnitsPerSemester}
+                onChange={(e) => setMinUnitsPerSemester(Number(e.target.value))}
+                className="mt-2 w-full accent-amber-500"
+              />
+            </div>
+          </div>
+          {preferredUnits > 18 && (
+            <p className="mt-2 text-[11px] text-orange-300">
+              19u+ may need approval.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+        <button
+          onClick={clearPlan}
+          className="rounded-xl border border-beach-border px-4 py-2 text-sm text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
+        >
+          Clear
+        </button>
+        <button
+          onClick={handleGenerate}
+          className="rounded-2xl bg-zinc-100 px-10 py-3 text-sm font-semibold text-zinc-950 shadow-[0_10px_30px_rgba(255,255,255,0.08)] transition-all hover:-translate-y-0.5 hover:bg-white"
+        >
+          Generate Plan
+        </button>
+        <button
+          onClick={() => setShowAdvanced((value) => !value)}
+          className="rounded-xl border border-beach-border px-3 py-2 text-xs font-mono text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
+        >
+          {showAdvanced ? "Less" : "More"}
+        </button>
+      </div>
+
+      {showAdvanced && (
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          <div className="rounded-2xl border border-beach-border/70 bg-beach-dark/40 p-3">
+            <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-600">Assumptions</p>
+            <div className="mt-2 space-y-2 text-xs text-zinc-400">
+              <p>Term offering is advisory, not a blocker.</p>
+              <p>Drafts favor prerequisite progress, major momentum, and balanced loads.</p>
+              <p>Final enrollment still needs MyCSULB review.</p>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-beach-border/70 bg-beach-dark/40 p-3">
+            <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-600">Regenerate when</p>
+            <div className="mt-2 space-y-2 text-xs text-zinc-400">
+              <p>Completed courses, transfer status, load, or target changes.</p>
+              <p>Dragging manually creates custom edits that regeneration will replace.</p>
+            </div>
+          </div>
+        </div>
       )}
-
-      <button
-        onClick={handleGenerate}
-        className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 transition-colors"
-      >
-        Generate Plan
-      </button>
-
-      <button
-        onClick={() => setShowAdvanced((v) => !v)}
-        className="px-3 py-1.5 bg-zinc-800 text-zinc-500 rounded-lg text-xs font-mono hover:text-zinc-300 transition-colors border border-beach-border"
-        title="Toggle advanced scheduling options"
-      >
-        {showAdvanced ? "Less ▲" : "Options ▼"}
-      </button>
-
-      <button
-        onClick={clearPlan}
-        className="px-4 py-1.5 bg-zinc-800 text-zinc-400 rounded-lg text-sm font-medium hover:bg-zinc-700 transition-colors border border-beach-border"
-      >
-        Reset
-      </button>
     </div>
   );
 }

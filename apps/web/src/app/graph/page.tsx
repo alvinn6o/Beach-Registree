@@ -3,15 +3,9 @@
 import { useState, useEffect } from "react";
 import CourseGraph from "@/components/graph/CourseGraph";
 import GraphControls from "@/components/graph/GraphControls";
-import TrackSelector from "@/components/graph/TrackSelector";
 import CoursePanel from "@/components/panel/CoursePanel";
-import ProgressBar from "@/components/shared/ProgressBar";
-import ViewModeToggle from "@/components/shared/ViewModeToggle";
-import TransferToggle from "@/components/shared/TransferToggle";
-import QuickSelect from "@/components/shared/QuickSelect";
+import AppHeader from "@/components/shared/AppHeader";
 import Legend from "@/components/shared/Legend";
-import DevTools from "@/components/shared/DevTools";
-import Link from "next/link";
 import { useProgressStore } from "@/stores/progressStore";
 
 export default function GraphPage() {
@@ -29,47 +23,10 @@ export default function GraphPage() {
 
   return (
     <div className="h-screen flex flex-col bg-beach-dark">
-      {/* Top bar */}
-      <header className="flex items-center justify-between px-4 py-2.5 border-b border-beach-border glass">
-        <div className="flex items-center gap-5">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-base font-display text-zinc-200 group-hover:text-zinc-50 transition-colors">
-              Beach RegisTree
-            </span>
-          </Link>
-          <nav className="flex items-center gap-0.5 bg-beach-dark/50 rounded-lg p-0.5">
-            {[
-              { href: "/graph", label: "Prerequisite Map", active: true },
-              { href: "/planner", label: "Plan My Degree", active: false },
-              { href: "/checklist", label: "Checklist", active: false },
-            ].map(({ href, label, active }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  active
-                    ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-        <div className="flex items-center gap-3">
-          <ViewModeToggle />
-          <TransferToggle />
-          <QuickSelect />
-          <div className="w-px h-5 bg-beach-border" />
-          <TrackSelector />
-          <div className="w-px h-5 bg-beach-border" />
-          <ProgressBar />
-          <GraphControls onSelectCourse={setSelectedCourse} />
-          <div className="w-px h-5 bg-beach-border" />
-          <DevTools />
-        </div>
-      </header>
+      <AppHeader
+        activePage="graph"
+        extraControls={<GraphControls onSelectCourse={setSelectedCourse} />}
+      />
 
       {/* Legend */}
       <div className="px-4 py-1.5 border-b border-beach-border/50 bg-beach-dark">

@@ -8,7 +8,8 @@ import { validatePlan } from "graph-core";
 import type { ValidationError } from "graph-core";
 import SemesterColumn from "./SemesterColumn";
 import PlannerControls from "./PlannerControls";
-import ViabilityChecker from "./ViabilityChecker";
+import AdvisorSummaryPanel from "./AdvisorSummaryPanel";
+import PlannerDetailsDeck from "./PlannerDetailsDeck";
 import CompletedSection from "./CompletedSection";
 import CoursePoolSection from "./CoursePoolSection";
 
@@ -24,6 +25,8 @@ export default function SemesterPlanner() {
   const addCourse = usePlannerStore((s) => s.addCourse);
   const addSemester = usePlannerStore((s) => s.addSemester);
   const removeLastSemester = usePlannerStore((s) => s.removeLastSemester);
+  const lastActionError = usePlannerStore((s) => s.lastActionError);
+  const clearLastActionError = usePlannerStore((s) => s.clearLastActionError);
   const allCourses = useCourseStore((s) => s.allCourses);
   const getCourse = useCourseStore((s) => s.getCourse);
   const completed = useProgressStore((s) => s.completed);
@@ -77,9 +80,20 @@ export default function SemesterPlanner() {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-beach-border flex-shrink-0">
+    <div className="h-full overflow-y-auto">
+      <div className="border-b border-beach-border px-4 py-4">
         <PlannerControls />
+        {lastActionError && (
+          <div className="mt-3 rounded-lg border border-red-500/20 bg-red-950/20 px-3 py-2 text-xs text-red-300">
+            {lastActionError}
+            <button
+              onClick={clearLastActionError}
+              className="ml-3 text-red-400/70 hover:text-red-300"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
       </div>
 
       <DndContext
@@ -88,12 +102,11 @@ export default function SemesterPlanner() {
         collisionDetection={pointerWithin}
         autoScroll={{ acceleration: 15, threshold: { x: 0.2, y: 0.15 } }}
       >
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Scrollable content area: semesters + completed + pool */}
-          <div className="flex-1 overflow-y-auto min-h-0">
-            {plan ? (
-              <div className="overflow-x-auto p-4 border-b border-beach-border/50">
-                <div className="flex gap-4 min-w-max">
+        <div>
+          {plan ? (
+            <div className="border-b border-beach-border/50 px-4 py-5">
+              <div className="overflow-x-auto overflow-y-visible pb-2">
+                <div className="flex min-w-max items-start gap-5">
                   {plan.semesters.map((sem) => (
                     <SemesterColumn
                       key={sem.term}
@@ -102,24 +115,18 @@ export default function SemesterPlanner() {
                     />
                   ))}
 
-                  {/* Add / Remove Semester controls */}
-                  <div className="flex flex-col items-center justify-center gap-2 min-w-[120px]">
+                  <div className="flex min-w-[140px] flex-col items-center justify-center gap-2 self-stretch rounded-[28px] border border-dashed border-beach-border/80 bg-beach-card/25 px-4 py-6">
                     <button
                       onClick={addSemester}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-mono
-                        bg-blue-600/20 text-blue-400 border border-blue-500/30
-                        hover:bg-blue-600/30 hover:border-blue-500/50 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-2xl border border-blue-500/30 bg-blue-600/15 px-4 py-2.5 text-sm font-mono text-blue-300 transition-colors hover:border-blue-400/50 hover:bg-blue-600/25"
                       title="Add another semester to extend your plan"
                     >
-                      <span className="text-lg leading-none">+</span> Add Semester
+                      <span className="text-lg leading-none">+</span> Add
                     </button>
                     {plan.semesters.length > 1 && (
                       <button
                         onClick={removeLastSemester}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono
-                          bg-zinc-800/50 text-zinc-500 border border-beach-border
-                          hover:bg-red-900/20 hover:text-red-400 hover:border-red-500/30 transition-colors
-                          disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-beach-border px-3 py-2 text-xs font-mono text-zinc-500 transition-colors hover:border-red-500/30 hover:bg-red-900/20 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-30"
                         disabled={plan.semesters[plan.semesters.length - 1]?.courses.length > 0}
                         title={
                           plan.semesters[plan.semesters.length - 1]?.courses.length > 0
@@ -127,30 +134,23 @@ export default function SemesterPlanner() {
                             : "Remove the last empty semester"
                         }
                       >
-                        <span className="text-sm leading-none">−</span> Remove Last
+                        <span className="text-sm leading-none">−</span> Remove
                       </button>
                     )}
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="p-8 text-center border-b border-beach-border/50">
-                <p className="text-zinc-500 mb-2">No plan generated yet.</p>
-                <p className="text-zinc-600 text-sm">
-                  Mark your completed courses in the Graph view, then generate a plan.
-                </p>
-              </div>
-            )}
+            </div>
+          ) : (
+            <div className="border-b border-beach-border/50 px-4 py-10 text-center">
+              <p className="text-sm text-zinc-400">No plan yet.</p>
+            </div>
+          )}
 
-            {/* Completed courses section */}
-            <CompletedSection />
-
-            {/* Remaining course pool */}
-            <CoursePoolSection />
-          </div>
-
-          {/* Viability checker pinned at bottom */}
-          {plan && <ViabilityChecker />}
+          <CompletedSection />
+          <CoursePoolSection />
+          {plan && <AdvisorSummaryPanel />}
+          <PlannerDetailsDeck />
         </div>
       </DndContext>
     </div>

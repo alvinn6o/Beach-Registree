@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useDroppable } from "@dnd-kit/core";
+import { validateCoursePlacement } from "graph-core";
 import CourseCard from "./CourseCard";
 import { useCourseStore } from "@/stores/courseStore";
 import { useProgressStore } from "@/stores/progressStore";
 import { usePlannerStore } from "@/stores/plannerStore";
+import { getPlacementHint, summarizePlacementErrors } from "@/lib/planner";
 import type { SemesterPlan, MajorRequirements } from "graph-core";
 import type { ValidationError } from "graph-core";
 
@@ -73,6 +75,7 @@ export default function SemesterColumn({ semester, errors }: SemesterColumnProps
     const c = getCourse(id);
     return sum + (c?.units ?? 0);
   }, 0);
+  const completedList = [...completed];
 
   const isFall = semester.term.startsWith("Fall");
   const hasIssues = errors.length > 0;
@@ -83,36 +86,41 @@ export default function SemesterColumn({ semester, errors }: SemesterColumnProps
   return (
     <div
       ref={setNodeRef}
-      className={`flex-shrink-0 w-60 rounded-2xl border transition-all duration-200 ${
+      className={`flex-shrink-0 w-72 rounded-[28px] border transition-all duration-200 shadow-[0_18px_48px_rgba(0,0,0,0.18)] ${
         isOver
-          ? "border-blue-500/50 bg-blue-950/10 shadow-lg shadow-blue-500/5"
+          ? "border-blue-500/50 bg-blue-950/10 shadow-lg shadow-blue-500/10"
           : hasIssues
-            ? "border-red-500/20 bg-beach-card"
-            : "border-beach-border bg-beach-card"
+            ? "border-red-500/20 bg-gradient-to-b from-beach-card to-[#11151d]"
+            : "border-beach-border bg-gradient-to-b from-beach-card to-[#11151d]"
       }`}
     >
       {/* Header */}
-      <div className={`px-4 py-3 rounded-t-2xl border-b transition-colors ${
+      <div className={`rounded-t-[28px] border-b px-4 py-4 text-center transition-colors ${
         isFall
-          ? "border-amber-900/20 bg-gradient-to-r from-amber-950/20 to-transparent"
-          : "border-sky-900/20 bg-gradient-to-r from-sky-950/20 to-transparent"
+          ? "border-amber-900/20 bg-gradient-to-r from-amber-950/25 to-transparent"
+          : "border-sky-900/20 bg-gradient-to-r from-sky-950/25 to-transparent"
       }`}>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${isFall ? "bg-amber-500/60" : "bg-sky-500/60"}`} />
-            <h3 className="font-mono text-xs font-semibold text-zinc-300 tracking-wide">
-              {semester.term}
-            </h3>
+            <span className={`h-2.5 w-2.5 rounded-full ${isFall ? "bg-amber-500/70" : "bg-sky-500/70"}`} />
+            <div>
+              <h3 className="font-mono text-xs font-semibold text-zinc-100 tracking-wide">
+                {semester.term}
+              </h3>
+              <p className="mt-1 text-[10px] text-zinc-500">
+                {semester.courses.length} course{semester.courses.length === 1 ? "" : "s"}
+              </p>
+            </div>
           </div>
           <span
-            className={`text-[11px] font-mono font-medium px-1.5 py-0.5 rounded ${
+            className={`rounded-full border px-2 py-1 text-[10px] font-mono font-medium ${
               isHeavy
-                ? "text-red-400 bg-red-900/30"
+                ? "border-red-900/40 bg-red-950/30 text-red-300"
                 : needsApproval
-                  ? "text-orange-400 bg-orange-900/30"
+                  ? "border-orange-900/40 bg-orange-950/30 text-orange-300"
                   : isLight
-                    ? "text-amber-400 bg-amber-900/30"
-                    : "text-zinc-500"
+                    ? "border-amber-900/40 bg-amber-950/30 text-amber-300"
+                    : "border-beach-border/60 bg-beach-dark/50 text-zinc-400"
             }`}
           >
             {totalUnits}u
@@ -120,8 +128,30 @@ export default function SemesterColumn({ semester, errors }: SemesterColumnProps
         </div>
       </div>
 
+      <div className="px-3 pt-3">
+        {(isLight || needsApproval || isHeavy) && semester.courses.length > 0 && (
+          <div className="mb-3 flex flex-wrap justify-center gap-2">
+            {isLight && (
+              <span className="rounded-full border border-amber-900/40 bg-amber-950/20 px-2.5 py-1 text-[9px] text-amber-300">
+                Below full-time
+              </span>
+            )}
+            {needsApproval && (
+              <span className="rounded-full border border-orange-900/40 bg-orange-950/20 px-2.5 py-1 text-[9px] text-orange-300">
+                Approval likely needed
+              </span>
+            )}
+            {isHeavy && (
+              <span className="rounded-full border border-red-900/40 bg-red-950/20 px-2.5 py-1 text-[9px] text-red-300">
+                Over max load
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Course cards */}
-      <div className="p-2 space-y-1.5 min-h-[100px]">
+      <div className="min-h-[160px] space-y-2 px-3 pb-3">
         {semester.courses.map((id) => {
           const course = getCourse(id);
           if (!course) return null;
@@ -137,14 +167,14 @@ export default function SemesterColumn({ semester, errors }: SemesterColumnProps
           );
         })}
         {semester.courses.length === 0 && (
-          <div className="flex items-center justify-center py-8">
-            <span className="text-[10px] text-zinc-700 font-mono">Drop courses here</span>
+          <div className="flex items-center justify-center rounded-2xl border border-dashed border-zinc-800 bg-beach-dark/30 py-12 text-center">
+            <span className="text-[10px] text-zinc-600 font-mono uppercase tracking-[0.18em]">Drop courses here</span>
           </div>
         )}
       </div>
 
       {/* Add course UI */}
-      <div className="px-2 pb-2">
+      <div className="px-3 pb-3 mt-auto">
         {adding ? (
           <div className="relative">
             <input
@@ -155,32 +185,68 @@ export default function SemesterColumn({ semester, errors }: SemesterColumnProps
                 if (e.key === "Escape") { setAdding(false); setQuery(""); }
               }}
               placeholder="Search course ID or name…"
-              className="w-full bg-beach-dark border border-beach-border rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-blue-500/50"
+              className="w-full bg-beach-dark border border-beach-border rounded-xl px-3 py-2 text-[11px] font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-blue-500/50"
             />
             {suggestions.length > 0 && (
-              <div className="absolute z-40 left-0 right-0 top-full mt-1 bg-[#181a24] border border-zinc-700/60 rounded-xl shadow-2xl overflow-hidden">
+              <div className="absolute z-40 left-0 right-0 top-full mt-2 bg-[#181a24] border border-zinc-700/60 rounded-2xl shadow-2xl overflow-hidden">
                 {suggestions.map((c) => {
-                  const wouldExceed = totalUnits + c.units > 21;
+                  const placementErrors = validateCoursePlacement(
+                    c.id,
+                    semester.term,
+                    allCourses,
+                    plan?.semesters ?? [],
+                    completedList
+                  );
+                  const isBlocked = placementErrors.length > 0;
                   const satisfied = isGroupSatisfied(c.id, major, scheduledIds, completed);
+                  const placementHint = getPlacementHint(
+                    c.id,
+                    plan?.semesters ?? [],
+                    allCourses,
+                    completedList
+                  );
+                  const reason = summarizePlacementErrors(placementErrors);
                   return (
                   <button
                     key={c.id}
-                    className={`w-full text-left px-3 py-2 transition-colors border-b border-zinc-800/50 last:border-0 ${
-                      wouldExceed ? "opacity-40 cursor-not-allowed" : satisfied ? "opacity-50" : "hover:bg-zinc-800/60"
+                    className={`w-full text-left px-3 py-2.5 transition-colors border-b border-zinc-800/50 last:border-0 ${
+                      isBlocked ? "opacity-40 cursor-not-allowed" : satisfied ? "opacity-50" : "hover:bg-zinc-800/60"
                     }`}
+                    title={
+                      isBlocked
+                        ? reason
+                        : placementHint.earliestValidTerm && placementHint.earliestValidTerm !== semester.term
+                          ? `Earliest valid term: ${placementHint.earliestValidTerm}`
+                          : `${c.id} can be added to ${semester.term}`
+                    }
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
-                      if (wouldExceed) return;
+                      if (isBlocked) return;
                       addCourse(c.id, semester.term, c.units);
                       setAdding(false);
                       setQuery("");
                     }}
                   >
-                    <span className="font-mono text-[10px] text-blue-400">{c.id}</span>
-                    <span className="text-[10px] text-zinc-500 ml-2 truncate">{c.name}</span>
-                    <span className="text-[9px] text-zinc-600 ml-1">· {c.units}u</span>
-                    {wouldExceed && <span className="text-[8px] text-red-400 ml-1">exceeds 21u</span>}
-                    {satisfied && !wouldExceed && <span className="text-[8px] text-green-500/60 ml-1">satisfied</span>}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 text-center">
+                        <span className="font-mono text-[10px] text-blue-400">{c.id}</span>
+                        <span className="ml-2 truncate text-[10px] text-zinc-500">{c.name}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[9px] text-zinc-600">· {c.units}u</span>
+                        {isBlocked && <span className="text-[8px] text-red-400 ml-1">blocked</span>}
+                        {satisfied && !isBlocked && <span className="text-[8px] text-green-500/60 ml-1">satisfied</span>}
+                        {!isBlocked && !satisfied && placementHint.earliestValidTerm === semester.term && (
+                          <span className="text-[8px] text-blue-400/70 ml-1">ready</span>
+                        )}
+                      </div>
+                    </div>
+                    {isBlocked && placementHint.earliestValidTerm && (
+                      <span className="block text-[8px] text-amber-400/80 mt-1">Later: {placementHint.earliestValidTerm}</span>
+                    )}
+                    {isBlocked && !placementHint.earliestValidTerm && reason && (
+                      <span className="block text-[8px] text-red-300/80 mt-1">{reason}</span>
+                    )}
                   </button>
                   );
                 })}
@@ -196,34 +262,12 @@ export default function SemesterColumn({ semester, errors }: SemesterColumnProps
         ) : (
           <button
             onClick={() => setAdding(true)}
-            className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-zinc-800 text-[10px] font-mono text-zinc-700 hover:text-zinc-500 hover:border-zinc-700 transition-colors"
+            className="w-full flex items-center justify-center gap-1 py-2.5 rounded-2xl border border-dashed border-zinc-800 text-[10px] font-mono text-zinc-600 hover:text-zinc-300 hover:border-zinc-700 transition-colors uppercase tracking-[0.18em]"
           >
             <span className="text-[13px] leading-none">+</span> Add course
           </button>
         )}
       </div>
-
-      {/* Dynamic warnings */}
-      {(isLight || needsApproval || isHeavy) && semester.courses.length > 0 && (
-        <div className="px-3 pb-2.5 space-y-1">
-          {isLight && (
-            <p className="text-[10px] text-amber-500/80 leading-tight">
-              Only {totalUnits} units — below full-time minimum (12)
-            </p>
-          )}
-          {needsApproval && (
-            <p className="text-[10px] text-orange-400/80 leading-tight flex items-center gap-1">
-              <span className="inline-block w-3 h-3 rounded-full border border-orange-500/50 text-[8px] text-center leading-3 flex-shrink-0">!</span>
-              {totalUnits} units — above 18 requires departmental approval
-            </p>
-          )}
-          {isHeavy && (
-            <p className="text-[10px] text-red-400/80 leading-tight">
-              {totalUnits} units — exceeds maximum (21)
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 }

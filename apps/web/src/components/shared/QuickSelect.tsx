@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useProgressStore, LOWER_GE_COURSES, UPPER_GE_COURSES, LOWER_CORE_COURSES } from "@/stores/progressStore";
 
 const GROUPS = [
-  { id: "lower-ge", label: "Lower GE", courses: LOWER_GE_COURSES, description: "17 lower-division General Education courses" },
-  { id: "upper-ge", label: "Upper GE", courses: UPPER_GE_COURSES, description: "3 upper-division GE courses (taken after 60 units)" },
+  { id: "lower-ge", label: "Lower GE", courses: LOWER_GE_COURSES, description: "Standalone lower-division GE placeholders not already covered by major courses" },
+  { id: "upper-ge", label: "Upper GE", courses: UPPER_GE_COURSES, description: "Remaining upper-division GE placeholders (taken after 60 units)" },
   { id: "lower-core", label: "Lower Core", courses: LOWER_CORE_COURSES, description: "Lower-division CECS, MATH, and ENGR courses" },
 ] as const;
 

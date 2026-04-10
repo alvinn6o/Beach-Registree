@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import type { SemesterPlan, PlanResult } from "graph-core";
+import { validateCoursePlacement } from "graph-core";
 import { useCourseStore } from "./courseStore";
 import { useProgressStore } from "./progressStore";
 
@@ -15,8 +16,10 @@ function nextTerm(term: string): string {
 
 interface PlannerStore {
   plan: PlanResult | null;
+  lastActionError: string | null;
   setPlan: (plan: PlanResult) => void;
   clearPlan: () => void;
+  clearLastActionError: () => void;
   moveCourse: (
     courseId: string,
     fromTerm: string,
@@ -88,23 +91,29 @@ function courseExistsInPlan(plan: PlanResult, courseId: string): boolean {
 
 export const usePlannerStore = create<PlannerStore>()((set, get) => ({
   plan: loadPlan(),
+  lastActionError: null,
 
   setPlan: (plan) =>
     set(() => {
       savePlan(plan);
-      return { plan };
+      return { plan, lastActionError: null };
     }),
 
   clearPlan: () =>
     set(() => {
       savePlan(null);
-      return { plan: null };
+      return { plan: null, lastActionError: null };
     }),
+
+  clearLastActionError: () =>
+    set(() => ({ lastActionError: null })),
 
   moveCourse: (courseId, fromTerm, toTerm) =>
     set((state) => {
       if (!state.plan) return state;
       const getCourse = useCourseStore.getState().getCourse;
+      const allCourses = useCourseStore.getState().allCourses;
+      const completed = [...useProgressStore.getState().completed];
       const minUnits = useProgressStore.getState().minUnitsPerSemester;
       const semesters = state.plan.semesters.map((sem) => {
         if (sem.term === fromTerm) {
@@ -123,10 +132,23 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
         }
         return sem;
       });
+      const placementErrors = validateCoursePlacement(
+        courseId,
+        toTerm,
+        allCourses,
+        semesters,
+        completed
+      );
+      if (placementErrors.length > 0) {
+        return {
+          ...state,
+          lastActionError: placementErrors.map((e) => e.message).join("; "),
+        };
+      }
       const recalced = recalcAllSemesters(semesters, getCourse, minUnits);
       const newPlan = { ...state.plan, semesters: recalced };
       savePlan(newPlan);
-      return { plan: newPlan };
+      return { plan: newPlan, lastActionError: null };
     }),
 
   removeCourse: (courseId, fromTerm) =>
@@ -146,7 +168,7 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
       const recalced = recalcAllSemesters(semesters, getCourse, minUnits);
       const newPlan = { ...state.plan, semesters: recalced };
       savePlan(newPlan);
-      return { plan: newPlan };
+      return { plan: newPlan, lastActionError: null };
     }),
 
   addCourse: (courseId, toTerm, units) =>
@@ -156,6 +178,8 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
       if (courseExistsInPlan(state.plan, courseId)) return state;
 
       const getCourse = useCourseStore.getState().getCourse;
+      const allCourses = useCourseStore.getState().allCourses;
+      const completed = [...useProgressStore.getState().completed];
       const minUnits = useProgressStore.getState().minUnitsPerSemester;
       const semesters = state.plan.semesters.map((sem) => {
         if (sem.term === toTerm) {
@@ -166,10 +190,23 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
         }
         return sem;
       });
+      const placementErrors = validateCoursePlacement(
+        courseId,
+        toTerm,
+        allCourses,
+        semesters,
+        completed
+      );
+      if (placementErrors.length > 0) {
+        return {
+          ...state,
+          lastActionError: placementErrors.map((e) => e.message).join("; "),
+        };
+      }
       const recalced = recalcAllSemesters(semesters, getCourse, minUnits);
       const newPlan = { ...state.plan, semesters: recalced };
       savePlan(newPlan);
-      return { plan: newPlan };
+      return { plan: newPlan, lastActionError: null };
     }),
 
   addSemester: () =>
@@ -189,7 +226,7 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
         semesters: [...state.plan.semesters, newSemester],
       };
       savePlan(newPlan);
-      return { plan: newPlan };
+      return { plan: newPlan, lastActionError: null };
     }),
 
   removeLastSemester: () =>
@@ -203,6 +240,6 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
         semesters: state.plan.semesters.slice(0, -1),
       };
       savePlan(newPlan);
-      return { plan: newPlan };
+      return { plan: newPlan, lastActionError: null };
     }),
 }));

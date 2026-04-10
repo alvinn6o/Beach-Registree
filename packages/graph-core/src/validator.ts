@@ -1,8 +1,8 @@
 import type { Course, SemesterPlan } from "./types";
-import { isPrereqMet } from "./dag";
+import { getCompletedUnits, isPrereqMet, isStandingMet } from "./dag";
 
 export interface ValidationError {
-  type: "prereq" | "availability" | "units" | "completeness";
+  type: "prereq" | "availability" | "units" | "completeness" | "standing";
   course?: string;
   semester?: string;
   message: string;
@@ -17,6 +17,7 @@ export function validatePlan(
   const courseMap = new Map(courses.map((c) => [c.id, c]));
   const errors: ValidationError[] = [];
   const scheduled = new Set(completedCourses);
+  let completedUnits = getCompletedUnits(courses, scheduled);
 
   for (const sem of semesters) {
     for (const courseId of sem.courses) {
@@ -46,10 +47,27 @@ export function validatePlan(
         });
       }
 
-      // Check semester availability (soft warning — catalog data is best-guess)
-      // NOTE: We don't hard-block this since actual availability depends on
-      // the university's scheduling each term. Kept as informational only.
-      // if (course.semester_offered !== "F/S" && course.semester_offered !== termSeason) { ... }
+      const missingCoreqs = (course.corequisites ?? []).filter(
+        (coreq) => !scheduled.has(coreq) && !sem.courses.includes(coreq)
+      );
+      if (missingCoreqs.length > 0) {
+        errors.push({
+          type: "prereq",
+          course: courseId,
+          semester: sem.term,
+          message: `${courseId} missing corequisite(s): ${missingCoreqs.join(", ")}`,
+        });
+      }
+
+      if (!isStandingMet(course, completedUnits)) {
+        errors.push({
+          type: "standing",
+          course: courseId,
+          semester: sem.term,
+          message: `${courseId} requires ${course.minUnitsCompleted} completed units before ${sem.term}`,
+        });
+      }
+
     }
 
     // Check unit limits
@@ -73,6 +91,7 @@ export function validatePlan(
     // Mark all courses in this semester as scheduled for next iteration
     for (const courseId of sem.courses) {
       scheduled.add(courseId);
+      completedUnits += courseMap.get(courseId)?.units ?? 0;
     }
   }
 
@@ -94,10 +113,12 @@ export function validateCoursePlacement(
 
   // Collect all courses completed before this semester
   const prior = new Set(completedCourses);
+  let priorUnits = getCompletedUnits(courses, prior);
   for (const sem of semesters) {
     if (sem.term === targetSemester) break;
     for (const id of sem.courses) {
       prior.add(id);
+      priorUnits += courseMap.get(id)?.units ?? 0;
     }
   }
 
@@ -121,10 +142,29 @@ export function validateCoursePlacement(
     });
   }
 
-  // NOTE: semester_offered check removed — catalog data is best-guess only
+  const targetSem = semesters.find((s) => s.term === targetSemester);
+  const missingCoreqs = (course.corequisites ?? []).filter(
+    (coreq) => !prior.has(coreq) && !targetSem?.courses.includes(coreq)
+  );
+  if (missingCoreqs.length > 0) {
+    errors.push({
+      type: "prereq",
+      course: courseId,
+      semester: targetSemester,
+      message: `Missing corequisite(s): ${missingCoreqs.join(", ")}`,
+    });
+  }
+
+  if (!isStandingMet(course, priorUnits)) {
+    errors.push({
+      type: "standing",
+      course: courseId,
+      semester: targetSemester,
+      message: `Requires ${course.minUnitsCompleted} completed units before this semester`,
+    });
+  }
 
   // Check unit limits if added
-  const targetSem = semesters.find((s) => s.term === targetSemester);
   if (targetSem) {
     const newTotal = targetSem.total_units + course.units;
     if (newTotal > 21) {

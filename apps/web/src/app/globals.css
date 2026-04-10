@@ -86,11 +86,6 @@ body {
   to { opacity: 1; }
 }
 
-@keyframes scrollHint {
-  0%, 100% { transform: translateY(0); opacity: 0.4; }
-  50% { transform: translateY(6px); opacity: 0.8; }
-}
-
 @keyframes titleReveal {
   0% { opacity: 0; transform: translateY(20px) scale(0.96); letter-spacing: 0.15em; }
   100% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: 0.02em; }
@@ -174,13 +169,6 @@ body {
 
 .hero-buttons {
   animation: buttonReveal 0.8s ease-out 1.8s both;
-}
-
-.scroll-hint {
-  animation: scrollHint 2s ease-in-out infinite;
-  animation-delay: 3s;
-  opacity: 0;
-  animation-fill-mode: backwards;
 }
 
 .separator-star {

@@ -136,6 +136,39 @@ export default function LandingPage() {
             </span>
           </div>
 
+          <div className="hero-buttons mb-10 flex flex-wrap items-center justify-center gap-3 md:gap-5">
+            <Link
+              href="/graph"
+              className="group rounded-full border border-zinc-700/60 px-7 py-3 text-sm uppercase tracking-[0.15em] text-zinc-300 transition-all duration-300 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300"
+              style={{ fontFamily: 'var(--font-hero)' }}
+            >
+              Course Map
+              <span className="inline-block ml-2 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">&rarr;</span>
+            </Link>
+
+            <Star />
+
+            <Link
+              href="/planner"
+              className="group rounded-full border border-zinc-700/60 px-7 py-3 text-sm uppercase tracking-[0.15em] text-zinc-300 transition-all duration-300 hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-300"
+              style={{ fontFamily: 'var(--font-hero)' }}
+            >
+              Degree Planner
+              <span className="inline-block ml-2 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">&rarr;</span>
+            </Link>
+
+            <Star />
+
+            <Link
+              href="/checklist"
+              className="group rounded-full border border-zinc-700/60 px-7 py-3 text-sm uppercase tracking-[0.15em] text-zinc-300 transition-all duration-300 hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-300"
+              style={{ fontFamily: 'var(--font-hero)' }}
+            >
+              Checklist
+              <span className="inline-block ml-2 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">&rarr;</span>
+            </Link>
+          </div>
+
           {/* Title */}
           <h1 className="hero-title text-[clamp(4rem,12vw,9rem)] font-semibold italic text-white leading-[0.9] tracking-[0.02em] mb-6">
             Beach Registree
@@ -145,54 +178,6 @@ export default function LandingPage() {
           <p className="hero-tagline text-lg md:text-xl text-zinc-500 font-light tracking-wide max-w-md leading-relaxed mb-2">
             Your CS degree, mapped and planned.
           </p>
-        </div>
-
-        {/* CTA Buttons — pinned near bottom of hero */}
-        <div className="hero-buttons absolute bottom-24 left-0 right-0 z-10 flex items-center justify-center gap-0">
-          <Link
-            href="/graph"
-            className="group px-8 py-3 text-sm tracking-[0.15em] uppercase text-zinc-300 border border-zinc-700/60 rounded-full
-                       hover:bg-emerald-500/10 hover:border-emerald-500/40 hover:text-emerald-300
-                       transition-all duration-300"
-            style={{ fontFamily: 'var(--font-hero)' }}
-          >
-            Course Map
-            <span className="inline-block ml-2 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">&rarr;</span>
-          </Link>
-
-          <Star />
-
-          <Link
-            href="/planner"
-            className="group px-8 py-3 text-sm tracking-[0.15em] uppercase text-zinc-300 border border-zinc-700/60 rounded-full
-                       hover:bg-amber-500/10 hover:border-amber-500/40 hover:text-amber-300
-                       transition-all duration-300"
-            style={{ fontFamily: 'var(--font-hero)' }}
-          >
-            Degree Planner
-            <span className="inline-block ml-2 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">&rarr;</span>
-          </Link>
-
-          <Star />
-
-          <Link
-            href="/checklist"
-            className="group px-8 py-3 text-sm tracking-[0.15em] uppercase text-zinc-300 border border-zinc-700/60 rounded-full
-                       hover:bg-violet-500/10 hover:border-violet-500/40 hover:text-violet-300
-                       transition-all duration-300"
-            style={{ fontFamily: 'var(--font-hero)' }}
-          >
-            Checklist
-            <span className="inline-block ml-2 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">&rarr;</span>
-          </Link>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="scroll-hint absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1">
-          <span className="text-[9px] font-mono text-zinc-600 tracking-[0.3em] uppercase">Scroll</span>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-zinc-600">
-            <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
         </div>
       </section>
 
@@ -308,42 +293,6 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* Testimonials */}
-        <section className="max-w-5xl mx-auto px-6 pb-20">
-          <p className="text-[10px] font-mono text-zinc-700 uppercase tracking-[0.3em] mb-8 text-center">
-            What students say
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[
-              {
-                quote: "I had no idea CECS 328 was blocking three upper-divs until I saw it on the graph. Fixed my entire junior year plan.",
-                name: "CS Junior",
-                detail: "Transferred from community college",
-              },
-              {
-                quote: "Generated my full 4-year plan in 30 seconds. Dragged two courses around to avoid 8am classes and it\u2019s still prereq-valid.",
-                name: "CS Sophomore",
-                detail: "Focus: Software Development",
-              },
-              {
-                quote: "The checklist finally showed me I was missing a science sequence course. Would have found out at graduation audit.",
-                name: "CS Senior",
-                detail: "On track for Spring graduation",
-              },
-            ].map(({ quote, name, detail }) => (
-              <div key={name} className="p-5 rounded-2xl bg-beach-card/30 border border-beach-border/40 flex flex-col gap-4">
-                <p className="text-[13px] text-zinc-500 leading-relaxed italic flex-1">
-                  &ldquo;{quote}&rdquo;
-                </p>
-                <div className="border-t border-beach-border/30 pt-3">
-                  <p className="text-[11px] font-mono text-zinc-400">{name}</p>
-                  <p className="text-[10px] font-mono text-zinc-700">{detail}</p>
-                </div>
-              </div>
-            ))}
           </div>
         </section>
 
