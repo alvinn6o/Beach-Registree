@@ -92,22 +92,39 @@ function inferCourseLevel(course: Course): number | null {
 function academicPhasePreference(course: Course): number {
   const level = inferCourseLevel(course);
 
+  // Phase preference (0 = schedule early, 1 = schedule late)
+  //
+  // Based on official CSULB roadmaps, the pattern is:
+  //   - Core prereqs + math are the BACKBONE of every semester (years 1-4)
+  //   - GEs are FILLERS — 1-2 per semester for load balancing
+  //   - Foundation GEs (English, oral comm) go in year 1
+  //   - Other GEs (arts, humanities, social science, ethnic studies) fill years 3-4
+  //   - Upper-div GE and capstone go in final year
+  //
+  // Core courses get prioritized via critical-path (cp) and downstream (ds)
+  // scoring, so they naturally schedule first. GEs have cp=1, ds=0 and
+  // fill remaining unit slots.
+
   if (course.category === "capstone") return 0.95;
   if (course.minUnitsCompleted && course.minUnitsCompleted >= 90) return 0.9;
   if (course.minUnitsCompleted && course.minUnitsCompleted >= 60) return 0.72;
-  if (course.category === "ge-upper") return 0.75;
+
+  // Core CS — lower-div early, upper-div mid-plan
+  if (course.category === "core") return level && level >= 300 ? 0.5 : 0.15;
+  // Math — front-loaded (prerequisites for everything)
+  if (course.category === "math") return level && level >= 300 ? 0.48 : 0.10;
+  // Support (ENGR, PHYS) — early alongside core
+  if (course.category === "support") return level && level >= 300 ? 0.55 : 0.18;
+  // Upper division electives — after core is mostly done
   if (course.category === "upper") return 0.62;
   if (course.category === "elective") return 0.58;
-  // GEs spread across the plan: foundations early (0.15), others mid-to-late (0.45)
-  // This matches official CSULB roadmaps where foundation GEs are year 1,
-  // but arts/humanities/social science fill semesters 5-8.
+
+  // GE — fillers spread across plan, not front-loaded
+  // Foundations (100-level) slightly earlier, rest mid-to-late
   if (course.category === "ge") {
-    const lvl = inferCourseLevel(course);
-    return lvl !== null && lvl < 200 ? 0.15 : 0.45;
+    return level !== null && level < 200 ? 0.25 : 0.50;
   }
-  if (course.category === "support") return level && level >= 300 ? 0.55 : 0.22;
-  if (course.category === "math") return level && level >= 300 ? 0.48 : 0.18;
-  if (course.category === "core") return level && level >= 300 ? 0.5 : 0.20;
+  if (course.category === "ge-upper") return 0.78;
 
   return 0.5;
 }
@@ -562,14 +579,14 @@ export function generatePlan(
     const urgencyBoost = slack <= 1 ? 14 : slack === 2 ? 7 : slack === 3 ? 3 : 0;
     // First-year required courses get a massive boost in the first 2 semesters
     const firstYearBoost = firstYearSet.has(courseId) && termIdx < 2 ? 20 : 0;
-    // Foundation GEs (100-level, English/Comm) get a boost in the first 2 semesters
-    // to match the real pattern where students complete foundations early.
-    // Other GEs (arts, humanities, social science) spread naturally across the plan
-    // as shown in official CSULB roadmaps (GE 3A/3B in year 3-4, GE 6/F in year 4).
-    const level = inferCourseLevel(course);
-    const isFoundationGE =
-      course.category === "ge" && level !== null && level < 200;
-    const geFoundationBoost = isFoundationGE && termIdx < 2 ? 8 : 0;
+
+    // Core/math/support courses get a priority boost over GEs to ensure
+    // they form the backbone of every semester (matching official roadmaps
+    // where 3-5 core courses per semester + 1-2 GE fillers).
+    const coreBoost =
+      course.category === "core" || course.category === "math" || course.category === "support"
+        ? 6
+        : 0;
 
     return (
       4 * cp +
@@ -577,7 +594,7 @@ export function generatePlan(
       2 * isReq +
       urgencyBoost +
       firstYearBoost +
-      geFoundationBoost +
+      coreBoost +
       phaseScore
     );
   }
