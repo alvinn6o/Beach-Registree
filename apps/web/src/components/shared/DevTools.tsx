@@ -62,11 +62,8 @@ export default function DevTools() {
     setCompleted([...next]);
   };
 
-  if (process.env.NODE_ENV !== "development") return null;
-
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[9px] font-mono text-yellow-600 uppercase tracking-widest mr-1">DEV</span>
 
       {GROUPS.map(({ key, label, ids }) => {
         const allDone = ids.every((id) => completed.has(id));

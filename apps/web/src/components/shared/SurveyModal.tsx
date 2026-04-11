@@ -210,8 +210,8 @@ export function PostPlanSurvey() {
   useEffect(() => {
     const handler = () => {
       if (!localStorage.getItem(POST_PLAN_KEY)) {
-        // Small delay so the plan renders first
-        setTimeout(() => setShow(true), 800);
+        // 10s delay so students interact with their plan before survey
+        setTimeout(() => setShow(true), 10000);
       }
     };
     window.addEventListener("beach-plan-generated", handler);
