@@ -3,11 +3,13 @@
 import { useState } from "react";
 import SemesterPlanner from "@/components/planner/SemesterPlanner";
 import SavedPlansPanel from "@/components/planner/SavedPlansPanel";
+import CoursePanel from "@/components/panel/CoursePanel";
 import AppHeader from "@/components/shared/AppHeader";
 import { PostPlanSurvey } from "@/components/shared/SurveyModal";
 
 export default function PlannerPage() {
   const [showSaved, setShowSaved] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
 
   return (
     <div className="h-screen flex flex-col bg-beach-dark">
@@ -31,8 +33,11 @@ export default function PlannerPage() {
       {/* Main */}
       <div className="flex min-h-0 flex-1">
         <div className="min-w-0 flex-1 overflow-hidden">
-          <SemesterPlanner />
+          <SemesterPlanner onSelectCourse={setSelectedCourse} selectedCourse={selectedCourse} />
         </div>
+        {selectedCourse && (
+          <CoursePanel courseId={selectedCourse} onClose={() => setSelectedCourse(null)} />
+        )}
         {showSaved && (
           <SavedPlansPanel onClose={() => setShowSaved(false)} />
         )}

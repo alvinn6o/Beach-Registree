@@ -15,6 +15,8 @@ interface CourseCardProps {
   semester: string;
   hasError?: boolean;
   errorMessage?: string;
+  onSelect?: (id: string | null) => void;
+  isSelected?: boolean;
 }
 
 export default function CourseCard({
@@ -22,6 +24,8 @@ export default function CourseCard({
   semester,
   hasError,
   errorMessage,
+  onSelect,
+  isSelected,
 }: CourseCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -31,6 +35,7 @@ export default function CourseCard({
 
   const [showTooltip, setShowTooltip] = useState(false);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pointerDownPos = useRef({ x: 0, y: 0 });
   const getCourse = useCourseStore((s) => s.getCourse);
   const allCourses = useCourseStore((s) => s.allCourses);
   const plan = usePlannerStore((s) => s.plan);
@@ -101,8 +106,18 @@ export default function CourseCard({
       className={`group relative overflow-hidden rounded-2xl border cursor-grab active:cursor-grabbing transition-all duration-200 ${
         hasError
           ? "border-red-500/30 bg-red-950/20"
-          : "border-beach-border/60 bg-gradient-to-br from-beach-dark/95 to-[#11151d] hover:border-zinc-600 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(0,0,0,0.28)]"
+          : isSelected
+            ? "border-blue-500/50 bg-gradient-to-br from-blue-950/30 to-[#11151d] shadow-[0_0_12px_rgba(59,130,246,0.15)]"
+            : "border-beach-border/60 bg-gradient-to-br from-beach-dark/95 to-[#11151d] hover:border-zinc-600 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(0,0,0,0.28)]"
       }`}
+      onPointerDown={(e) => { pointerDownPos.current = { x: e.clientX, y: e.clientY }; }}
+      onPointerUp={(e) => {
+        const dx = e.clientX - pointerDownPos.current.x;
+        const dy = e.clientY - pointerDownPos.current.y;
+        if (Math.abs(dx) < 5 && Math.abs(dy) < 5 && onSelect) {
+          onSelect(isSelected ? null : course.id);
+        }
+      }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

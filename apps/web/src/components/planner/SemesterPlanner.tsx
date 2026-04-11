@@ -13,7 +13,12 @@ import PlannerDetailsDeck from "./PlannerDetailsDeck";
 import CompletedSection from "./CompletedSection";
 import CoursePoolSection from "./CoursePoolSection";
 
-export default function SemesterPlanner() {
+interface SemesterPlannerProps {
+  onSelectCourse?: (id: string | null) => void;
+  selectedCourse?: string | null;
+}
+
+export default function SemesterPlanner({ onSelectCourse, selectedCourse }: SemesterPlannerProps) {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
@@ -65,7 +70,10 @@ export default function SemesterPlanner() {
       }
     } else if (fromZone === "pool") {
       // === Dragging FROM the course pool ===
-      if (overTerm) {
+      if (overZone === "completed") {
+        // Pool → Completed: mark complete directly
+        if (!completed.has(courseId)) toggleCompleted(courseId);
+      } else if (overTerm) {
         // Pool → Semester: add to that semester
         addCourse(courseId, overTerm, course.units);
       }
@@ -112,6 +120,8 @@ export default function SemesterPlanner() {
                       key={sem.term}
                       semester={sem}
                       errors={errors.filter((e) => e.semester === sem.term)}
+                      onSelectCourse={onSelectCourse}
+                      selectedCourse={selectedCourse}
                     />
                   ))}
 

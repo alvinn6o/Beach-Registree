@@ -35,9 +35,11 @@ function isGroupSatisfied(
 interface SemesterColumnProps {
   semester: SemesterPlan;
   errors: ValidationError[];
+  onSelectCourse?: (id: string | null) => void;
+  selectedCourse?: string | null;
 }
 
-export default function SemesterColumn({ semester, errors }: SemesterColumnProps) {
+export default function SemesterColumn({ semester, errors, onSelectCourse, selectedCourse }: SemesterColumnProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: semester.term,
     data: { term: semester.term },
@@ -166,6 +168,8 @@ export default function SemesterColumn({ semester, errors }: SemesterColumnProps
               semester={semester.term}
               hasError={courseErrors.length > 0}
               errorMessage={courseErrors.map((e) => e.message).join("; ")}
+              onSelect={onSelectCourse}
+              isSelected={selectedCourse === id}
             />
           );
         })}

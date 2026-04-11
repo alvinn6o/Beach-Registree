@@ -10,6 +10,7 @@ import TransferToggle from "@/components/shared/TransferToggle";
 import QuickSelect from "@/components/shared/QuickSelect";
 import DevTools from "@/components/shared/DevTools";
 import SelectionActions from "@/components/shared/SelectionActions";
+import { ReviewModal } from "@/components/shared/SurveyModal";
 import { useProgressStore } from "@/stores/progressStore";
 import { getTrackLabel } from "@/lib/trackRequirements";
 
@@ -28,6 +29,7 @@ interface AppHeaderProps {
 
 export default function AppHeader({ activePage, extraControls }: AppHeaderProps) {
   const [showSetup, setShowSetup] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const completed = useProgressStore((state) => state.completed);
   const selectedTrack = useProgressStore((state) => state.selectedTrack);
   const isTransfer = useProgressStore((state) => state.isTransferStudent);
@@ -69,6 +71,12 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
             <ProgressBar />
           </div>
           {extraControls}
+          <button
+            onClick={() => setShowReview(true)}
+            className="rounded-xl border border-amber-800/50 bg-amber-950/20 px-3 py-2 text-xs font-medium text-amber-300 transition-all hover:border-amber-700/60 hover:bg-amber-950/30"
+          >
+            Write a Review
+          </button>
           <button
             onClick={() => setShowSetup((value) => !value)}
             className={`rounded-xl border px-3 py-2 text-xs font-medium transition-all ${
@@ -147,6 +155,8 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
           </div>
         </div>
       )}
+
+      <ReviewModal open={showReview} onClose={() => setShowReview(false)} />
     </header>
   );
 }

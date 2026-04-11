@@ -360,6 +360,150 @@ export function PostPlanSurvey() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   3. REVIEW MODAL — user-initiated via "Write a Review" button
+      Collects: rating, suggestions, bugs
+   ═══════════════════════════════════════════════════════════════ */
+export function ReviewModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [step, setStep] = useState(0); // 0 = form, 1 = thanks
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [suggestions, setSuggestions] = useState("");
+  const [bugs, setBugs] = useState("");
+
+  const handleSubmit = () => {
+    saveResponse("review", { rating, suggestions, bugs });
+    setStep(1);
+  };
+
+  const handleClose = () => {
+    setStep(0);
+    setRating(0);
+    setSuggestions("");
+    setBugs("");
+    onClose();
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={handleClose}
+        style={{ animation: "fadeIn 0.3s ease-out" }}
+      />
+
+      <div
+        className="relative w-full max-w-md bg-zinc-900 border border-zinc-700/60 rounded-2xl shadow-2xl overflow-hidden"
+        style={{ animation: "fadeUp 0.4s ease-out" }}
+      >
+        {step === 0 && (
+          <div className="p-8">
+            <h2 className="text-lg font-semibold text-white mb-1">Write a Review</h2>
+            <p className="text-sm text-zinc-500 mb-6">Help us improve Beach RegisTree.</p>
+
+            {/* Rating */}
+            <div className="mb-6">
+              <label className="block text-sm text-zinc-300 mb-2.5">
+                How would you rate Beach RegisTree overall?
+              </label>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setRating(n)}
+                    onMouseEnter={() => setHoverRating(n)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="p-1 transition-transform hover:scale-110"
+                  >
+                    <svg
+                      className={`w-8 h-8 transition-colors ${
+                        n <= (hoverRating || rating) ? "text-amber-400" : "text-zinc-700"
+                      }`}
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Suggestions */}
+            <div className="mb-5">
+              <label className="block text-sm text-zinc-300 mb-2.5">
+                Suggestions or feature requests
+                <span className="text-zinc-600"> (optional)</span>
+              </label>
+              <textarea
+                value={suggestions}
+                onChange={(e) => setSuggestions(e.target.value)}
+                placeholder="What would make this more useful?"
+                rows={2}
+                className="w-full px-3.5 py-2.5 text-sm bg-zinc-800/60 border border-zinc-700/50 rounded-xl text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-emerald-500/40 resize-none"
+              />
+            </div>
+
+            {/* Bugs */}
+            <div className="mb-7">
+              <label className="block text-sm text-zinc-300 mb-2.5">
+                Found any bugs?
+                <span className="text-zinc-600"> (optional)</span>
+              </label>
+              <textarea
+                value={bugs}
+                onChange={(e) => setBugs(e.target.value)}
+                placeholder="Describe anything that didn't work as expected"
+                rows={2}
+                className="w-full px-3.5 py-2.5 text-sm bg-zinc-800/60 border border-zinc-700/50 rounded-xl text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-red-500/40 resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button onClick={handleClose} className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!rating}
+                className={`px-6 py-2.5 text-sm font-medium rounded-full transition-all ${
+                  rating
+                    ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                    : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                }`}
+              >
+                Submit Review
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 1 && (
+          <div className="p-8 text-center">
+            <div className="w-12 h-12 mx-auto mb-5 rounded-full bg-emerald-500/15 flex items-center justify-center">
+              <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-white mb-2">Thank you!</h2>
+            <p className="text-sm text-zinc-400 mb-6">
+              Your review helps us build a better tool for CSULB students.
+            </p>
+            <button
+              onClick={handleClose}
+              className="px-6 py-2.5 text-sm font-medium rounded-full bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
    Default export kept for backwards compat (landing page)
    ═══════════════════════════════════════════════════════════════ */
 export default IntroSurvey;
