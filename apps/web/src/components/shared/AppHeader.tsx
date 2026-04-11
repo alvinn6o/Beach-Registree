@@ -36,6 +36,7 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
   const selectedTrackLabel = getTrackLabel(selectedTrack);
 
   return (
+    <>
     <header className="border-b border-beach-border glass">
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div className="flex flex-wrap items-center gap-4">
@@ -156,7 +157,8 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
         </div>
       )}
 
-      <ReviewModal open={showReview} onClose={() => setShowReview(false)} />
     </header>
+    <ReviewModal open={showReview} onClose={() => setShowReview(false)} />
+    </>
   );
 }
