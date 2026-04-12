@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-// GE placeholder courses aligned to the 2025-2026 CSULB CS worksheet.
+// GE placeholder courses aligned to the 2026-2027 CSULB CS worksheet.
 // Lower-division science/math GE is double-counted by major requirements, so
 // only standalone GE slots remain here.
 export const LOWER_GE_COURSES = [

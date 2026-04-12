@@ -23,6 +23,7 @@ export interface TrackDefinition {
 
 export const TRACK_REQUIREMENT_NAME = "Focus Area (12 units)";
 export const TRACK_COURSE_COUNT = 4;
+export const GENERAL_ELECTIVES_COUNT = 2;
 export const TRACK_SELECTION_MESSAGE =
   "Select a focus-area track before generating or validating a plan.";
 

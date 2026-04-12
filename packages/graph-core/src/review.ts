@@ -126,8 +126,21 @@ export function assessPlanHealth({
 
   const issues: PlanHealthIssue[] = [...validationIssues];
 
+  // Build set of course IDs that belong to "choose" groups — these are
+  // reported as "electives" issues below, not individual completeness errors.
+  const chooseGroupCourseIds = new Set<string>();
+  for (const requirement of majorRequirements.requirements) {
+    if (requirement.type === "choose") {
+      for (const id of requirement.courses) {
+        chooseGroupCourseIds.add(id);
+      }
+    }
+  }
+
   for (const requiredId of allRequired) {
     if (scheduledIds.has(requiredId)) continue;
+    // Skip courses from "choose" groups — they're handled by the elective check below
+    if (chooseGroupCourseIds.has(requiredId)) continue;
     const course = courseMap.get(requiredId);
     issues.push({
       severity: "hard",

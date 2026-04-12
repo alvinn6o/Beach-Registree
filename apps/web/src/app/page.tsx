@@ -134,7 +134,7 @@ export default function LandingPage() {
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-[10px] font-mono text-emerald-400/80 tracking-[0.2em] uppercase">
-              CSULB CS B.S. &middot; 2025&ndash;2026 Catalog
+              CSULB CS B.S. &middot; 2026&ndash;2027 Catalog
             </span>
           </div>
 
@@ -263,7 +263,7 @@ export default function LandingPage() {
                 Progress Tracker
               </h3>
               <p className="text-[13px] text-zinc-500 leading-relaxed mb-4">
-                Requirements checklist synced with the 2025&ndash;2026 catalog. See exactly what&apos;s done, planned, and still needed.
+                Requirements checklist synced with the 2026&ndash;2027 catalog. See exactly what&apos;s done, planned, and still needed.
               </p>
               <ul className="space-y-1.5">
                 {["Grouped by requirement type", "Unit counts per category", "Visual progress bar"].map((f) => (
@@ -277,26 +277,10 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Stats */}
-        <section className="max-w-4xl mx-auto px-6 pb-20">
-          <div className="border-t border-beach-border/40 pt-14">
-            <p className="text-[10px] font-mono text-zinc-700 uppercase tracking-[0.3em] mb-10 text-center">
-              Built with data from the official CSULB catalog
-            </p>
-            <div className="grid grid-cols-3 gap-6">
-              {[
-                { stat: "82", label: "Courses mapped" },
-                { stat: "13", label: "Requirement groups" },
-                { stat: "3", label: "Focus areas" },
-              ].map(({ stat, label }) => (
-                <div key={label} className="text-center">
-                  <div className="text-4xl font-light text-zinc-100 mb-1.5" style={{ fontFamily: 'var(--font-hero)' }}>{stat}</div>
-                  <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em]">{label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* Divider */}
+        <div className="max-w-4xl mx-auto px-6 pb-20">
+          <div className="border-t border-beach-border/40" />
+        </div>
 
         {/* How it works */}
         <section className="max-w-4xl mx-auto px-6 pb-20">
@@ -340,7 +324,7 @@ export default function LandingPage() {
         {/* Metadata tags */}
         <section className="max-w-3xl mx-auto px-6 pb-16">
           <div className="flex items-center justify-center gap-6 flex-wrap">
-            {["CSULB", "CS B.S.", "2025\u20132026 Catalog", "No Account Needed", "Free"].map((tag) => (
+            {["CSULB", "CS B.S.", "2026\u20132027 Catalog", "No Account Needed", "Free"].map((tag) => (
               <span key={tag} className="text-[10px] font-mono text-zinc-700 uppercase tracking-[0.2em]">
                 {tag}
               </span>

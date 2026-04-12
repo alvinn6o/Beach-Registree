@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useProgressStore } from "@/stores/progressStore";
 import { useCourseStore } from "@/stores/courseStore";
-import { TRACKS } from "@/lib/trackRequirements";
+import { TRACKS, GENERAL_ELECTIVES_COUNT } from "@/lib/trackRequirements";
 
 export default function TrackSelector() {
   const [mounted, setMounted] = useState(false);
@@ -46,11 +46,74 @@ export default function TrackSelector() {
 
     setSelectedTrack(trackId);
 
+    // Build a set of courses that appear in OTHER tracks (required or elective)
+    // so we can deprioritize shared courses and prefer track-unique ones.
+    const otherTrackCourses = new Set<string>();
+    for (const t of TRACKS) {
+      if (t.id === trackId) continue;
+      for (const id of t.required ?? []) otherTrackCourses.add(id);
+      for (const id of t.electives) otherTrackCourses.add(id);
+    }
+
+    // Sort electives: unique-to-this-track first, shared courses last
+    const sortedElectives = [...track.electives].sort((a, b) => {
+      const aShared = otherTrackCourses.has(a) ? 1 : 0;
+      const bShared = otherTrackCourses.has(b) ? 1 : 0;
+      return aShared - bShared;
+    });
+
     // Add track's required course(s) + enough electives to fill 4 for Focus Area
     const required = track.required ?? [];
     const electivesToFill = Math.max(0, 4 - required.length);
-    const electives = track.electives.slice(0, electivesToFill);
-    const toAdd = [...required, ...electives].filter(
+    const focusElectives = sortedElectives.slice(0, electivesToFill);
+    const focusCourses = [...required, ...focusElectives];
+
+    // Also auto-select general electives (2 courses):
+    // 1. Remaining track-UNIQUE electives (not shared with other tracks)
+    // 2. Neutral courses (not in ANY track — truly general upper-div)
+    // 3. Shared track courses only as last resort
+    const focusSet = new Set(focusCourses);
+    const remainingTrackElectives = sortedElectives.filter(
+      (id) => !focusSet.has(id)
+    );
+    const generalElectiveReq = major.requirements.find(
+      (r) => r.name === "General Electives (6 units)"
+    );
+    const generalElectiveOptions = generalElectiveReq?.courses ?? [];
+
+    // Build set of ALL courses across every track
+    const allTrackCourses = new Set<string>();
+    for (const t of TRACKS) {
+      for (const id of t.required ?? []) allTrackCourses.add(id);
+      for (const id of t.electives) allTrackCourses.add(id);
+    }
+
+    const generalPicks: string[] = [];
+    // 1. Remaining track-unique electives
+    for (const id of remainingTrackElectives) {
+      if (generalPicks.length >= GENERAL_ELECTIVES_COUNT) break;
+      if (!otherTrackCourses.has(id) && generalElectiveOptions.includes(id)) {
+        generalPicks.push(id);
+      }
+    }
+    // 2. Neutral courses — not in any track at all
+    if (generalPicks.length < GENERAL_ELECTIVES_COUNT) {
+      const usedSet = new Set([...focusCourses, ...generalPicks]);
+      for (const id of generalElectiveOptions) {
+        if (generalPicks.length >= GENERAL_ELECTIVES_COUNT) break;
+        if (!usedSet.has(id) && !allTrackCourses.has(id)) generalPicks.push(id);
+      }
+    }
+    // 3. Shared track courses as last resort
+    if (generalPicks.length < GENERAL_ELECTIVES_COUNT) {
+      const usedSet = new Set([...focusCourses, ...generalPicks]);
+      for (const id of generalElectiveOptions) {
+        if (generalPicks.length >= GENERAL_ELECTIVES_COUNT) break;
+        if (!usedSet.has(id)) generalPicks.push(id);
+      }
+    }
+
+    const toAdd = [...focusCourses, ...generalPicks].filter(
       (id) => !current.includes(id)
     );
     setSelectedElectives([...current, ...toAdd]);

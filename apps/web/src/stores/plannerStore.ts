@@ -25,6 +25,12 @@ interface PlannerStore {
     fromTerm: string,
     toTerm: string
   ) => void;
+  swapCourses: (
+    courseA: string,
+    fromTermA: string,
+    courseB: string,
+    fromTermB: string
+  ) => void;
   removeCourse: (courseId: string, fromTerm: string) => void;
   addCourse: (courseId: string, toTerm: string, units: number) => void;
   addSemester: () => void;
@@ -149,6 +155,72 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
       const newPlan = { ...state.plan, semesters: recalced };
       savePlan(newPlan);
       return { plan: newPlan, lastActionError: null };
+    }),
+
+  swapCourses: (courseA, fromTermA, courseB, fromTermB) =>
+    set((state) => {
+      if (!state.plan) return state;
+      const getCourse = useCourseStore.getState().getCourse;
+      const allCourses = useCourseStore.getState().allCourses;
+      const completed = [...useProgressStore.getState().completed];
+      const minUnits = useProgressStore.getState().minUnitsPerSemester;
+
+      // Build swapped semesters: A goes to B's term, B goes to A's term
+      const swappedSemesters = state.plan.semesters.map((sem) => {
+        let courses = [...sem.courses];
+        if (sem.term === fromTermA) {
+          courses = courses.filter((c) => c !== courseA);
+          if (!courses.includes(courseB)) courses.push(courseB);
+        }
+        if (sem.term === fromTermB) {
+          courses = courses.filter((c) => c !== courseB);
+          if (!courses.includes(courseA)) courses.push(courseA);
+        }
+        return { ...sem, courses };
+      });
+
+      // Validate both placements
+      const errorsA = validateCoursePlacement(courseA, fromTermB, allCourses, swappedSemesters, completed);
+      const errorsB = validateCoursePlacement(courseB, fromTermA, allCourses, swappedSemesters, completed);
+
+      if (errorsA.length === 0 && errorsB.length === 0) {
+        // Full swap is valid
+        const recalced = recalcAllSemesters(swappedSemesters, getCourse, minUnits);
+        const newPlan = { ...state.plan, semesters: recalced };
+        savePlan(newPlan);
+        return { plan: newPlan, lastActionError: null };
+      }
+
+      // Swap failed — try just placing A in B's semester, removing B
+      const displaceSemesters = state.plan.semesters.map((sem) => {
+        let courses = [...sem.courses];
+        if (sem.term === fromTermA) {
+          courses = courses.filter((c) => c !== courseA);
+        }
+        if (sem.term === fromTermB) {
+          courses = courses.filter((c) => c !== courseB);
+          if (!courses.includes(courseA)) courses.push(courseA);
+        }
+        return { ...sem, courses };
+      });
+
+      const displaceErrors = validateCoursePlacement(courseA, fromTermB, allCourses, displaceSemesters, completed);
+      if (displaceErrors.length === 0) {
+        const recalced = recalcAllSemesters(displaceSemesters, getCourse, minUnits);
+        const newPlan = { ...state.plan, semesters: recalced };
+        savePlan(newPlan);
+        const bName = getCourse(courseB)?.name ?? courseB;
+        return {
+          plan: newPlan,
+          lastActionError: `Swap not possible — ${courseB} (${bName}) was removed to the pool instead.`,
+        };
+      }
+
+      // Neither works
+      return {
+        ...state,
+        lastActionError: `Cannot place ${courseA} in ${fromTermB}: ${displaceErrors.map((e) => e.message).join("; ")}`,
+      };
     }),
 
   removeCourse: (courseId, fromTerm) =>

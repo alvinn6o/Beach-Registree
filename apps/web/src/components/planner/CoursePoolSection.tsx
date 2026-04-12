@@ -9,7 +9,7 @@ import { useProgressStore } from "@/stores/progressStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { categoryColors } from "@/lib/colors";
 import type { Course, MajorRequirements } from "graph-core";
-import { resolveTrackAwareRequirementCourses } from "@/lib/trackRequirements";
+import { resolveTrackAwareRequirementCourses, getTrackCourses } from "@/lib/trackRequirements";
 
 /** Compute course IDs that belong to a satisfied "choose N" group but weren't chosen */
 function getSatisfiedAlternatives(
@@ -46,6 +46,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   math: "Mathematics",
   core: "CS Core",
   upper: "Upper Division",
+  "track-elective": "Track Specific Electives",
+  "general-elective": "Upper Division Electives",
   elective: "Electives",
   capstone: "Capstone",
   ge: "General Education",
@@ -57,6 +59,8 @@ const CATEGORY_ORDER = [
   "math",
   "core",
   "upper",
+  "track-elective",
+  "general-elective",
   "elective",
   "capstone",
   "ge",
@@ -174,8 +178,20 @@ export default function CoursePoolSection() {
   );
   const requiredIds = resolvedRequirements.allRequired;
 
+  // Also include ALL options from track-specific and general elective groups
+  // so students can browse and drag them — not just pre-selected ones
+  const trackCourseIdSet = new Set(getTrackCourses(selectedTrack));
+  const generalElectiveReq = major.requirements.find(
+    (r) => r.name === "General Electives (6 units)"
+  );
+  const electiveOptionIds = new Set([
+    ...trackCourseIdSet,
+    ...(generalElectiveReq?.courses ?? []),
+  ]);
+  const allPoolIds = new Set([...requiredIds, ...electiveOptionIds]);
+
   // Deduplicate and filter to unscheduled, uncompleted
-  const poolCourses = [...new Set(requiredIds)]
+  const poolCourses = [...allPoolIds]
     .filter((id) => !completed.has(id) && !scheduledIds.has(id))
     .map((id) => getCourse(id))
     .filter((c): c is Course => c !== undefined);
@@ -200,10 +216,20 @@ export default function CoursePoolSection() {
 
   if (poolCourses.length === 0) return null;
 
-  // Group by category, preserving defined order
+  // Reuse trackCourseIdSet and generalElectiveReq from above for grouping
+  const generalElectiveIds = new Set(generalElectiveReq?.courses ?? []);
+
+  // Group by category, splitting "elective" into track-specific vs general
   const grouped = new Map<string, Course[]>();
   for (const course of poolCourses) {
-    const cat = course.category;
+    let cat = course.category as string;
+    if (cat === "elective") {
+      if (trackCourseIdSet.has(course.id)) {
+        cat = "track-elective";
+      } else if (generalElectiveIds.has(course.id)) {
+        cat = "general-elective";
+      }
+    }
     if (!grouped.has(cat)) grouped.set(cat, []);
     grouped.get(cat)!.push(course);
   }

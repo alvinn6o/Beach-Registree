@@ -26,6 +26,7 @@ export default function SemesterPlanner({ onSelectCourse, selectedCourse }: Seme
 
   const plan = usePlannerStore((s) => s.plan);
   const moveCourse = usePlannerStore((s) => s.moveCourse);
+  const swapCourses = usePlannerStore((s) => s.swapCourses);
   const removeCourse = usePlannerStore((s) => s.removeCourse);
   const addCourse = usePlannerStore((s) => s.addCourse);
   const addSemester = usePlannerStore((s) => s.addSemester);
@@ -51,9 +52,16 @@ export default function SemesterPlanner({ onSelectCourse, selectedCourse }: Seme
     const fromSemester = active.data.current.fromSemester as string | undefined;
     const fromZone = active.data.current.fromZone as string | undefined;
 
-    // Destination: semester columns expose `term`; completed zone exposes `zone`
-    const overTerm = over.data.current?.term as string | undefined;
+    // Destination: semester columns expose `term`; completed zone exposes `zone`;
+    // course cards expose `isCard`, `courseId`, `semester`
+    const overIsCard = over.data.current?.isCard as boolean | undefined;
+    const overTerm = overIsCard
+      ? (over.data.current?.semester as string | undefined)
+      : (over.data.current?.term as string | undefined);
     const overZone = over.data.current?.zone as string | undefined;
+    const overCourseId = overIsCard
+      ? (over.data.current?.courseId as string | undefined)
+      : undefined;
 
     const course = getCourse(courseId);
     if (!course) return;
@@ -64,6 +72,9 @@ export default function SemesterPlanner({ onSelectCourse, selectedCourse }: Seme
         // Semester → Completed: remove from plan, mark complete
         removeCourse(courseId, fromSemester);
         if (!completed.has(courseId)) toggleCompleted(courseId);
+      } else if (overIsCard && overCourseId && overTerm && overCourseId !== courseId) {
+        // Semester card → another semester card: swap
+        swapCourses(courseId, fromSemester, overCourseId, overTerm);
       } else if (overTerm && overTerm !== fromSemester) {
         // Semester → Semester: move between columns
         moveCourse(courseId, fromSemester, overTerm);

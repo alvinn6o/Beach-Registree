@@ -205,17 +205,26 @@ export function PostPlanSurvey() {
   const [hoverEase, setHoverEase] = useState(0);
   const [feedback, setFeedback] = useState("");
 
-  // Parent triggers this via the `trigger` prop mechanism,
-  // but we also expose a manual trigger via window event
+  // Show once after first plan generation, with a 10s delay.
+  // Guard against duplicate triggers (multiple Generate clicks).
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const handler = () => {
-      if (!localStorage.getItem(POST_PLAN_KEY)) {
-        // 10s delay so students interact with their plan before survey
-        setTimeout(() => setShow(true), 10000);
-      }
+      if (localStorage.getItem(POST_PLAN_KEY)) return;
+      // Clear any pending timer so only the latest trigger counts
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        // Re-check in case user dismissed during the delay
+        if (!localStorage.getItem(POST_PLAN_KEY)) {
+          setShow(true);
+        }
+      }, 10000);
     };
     window.addEventListener("beach-plan-generated", handler);
-    return () => window.removeEventListener("beach-plan-generated", handler);
+    return () => {
+      window.removeEventListener("beach-plan-generated", handler);
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const handleSubmit = () => {

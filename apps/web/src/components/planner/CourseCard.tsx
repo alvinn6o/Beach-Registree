@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useDraggable } from "@dnd-kit/core";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { categoryColors } from "@/lib/colors";
 import { buildCourseRationale } from "@/lib/planner";
@@ -27,11 +27,21 @@ export default function CourseCard({
   onSelect,
   isSelected,
 }: CourseCardProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
+  const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } =
     useDraggable({
       id: `${course.id}::${semester}`,
       data: { courseId: course.id, fromSemester: semester },
     });
+
+  const { setNodeRef: setDropRef, isOver: isDropOver } = useDroppable({
+    id: `card::${course.id}::${semester}`,
+    data: { courseId: course.id, semester, isCard: true },
+  });
+
+  const setNodeRef = (node: HTMLElement | null) => {
+    setDragRef(node);
+    setDropRef(node);
+  };
 
   const [showTooltip, setShowTooltip] = useState(false);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -104,11 +114,13 @@ export default function CourseCard({
       {...listeners}
       {...attributes}
       className={`group relative overflow-hidden rounded-2xl border cursor-grab active:cursor-grabbing transition-all duration-200 ${
-        hasError
-          ? "border-red-500/30 bg-red-950/20"
-          : isSelected
-            ? "border-blue-500/50 bg-gradient-to-br from-blue-950/30 to-[#11151d] shadow-[0_0_12px_rgba(59,130,246,0.15)]"
-            : "border-beach-border/60 bg-gradient-to-br from-beach-dark/95 to-[#11151d] hover:border-zinc-600 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(0,0,0,0.28)]"
+        isDropOver
+          ? "border-amber-500/60 bg-amber-950/20 shadow-[0_0_14px_rgba(245,158,11,0.15)]"
+          : hasError
+            ? "border-red-500/30 bg-red-950/20"
+            : isSelected
+              ? "border-blue-500/50 bg-gradient-to-br from-blue-950/30 to-[#11151d] shadow-[0_0_12px_rgba(59,130,246,0.15)]"
+              : "border-beach-border/60 bg-gradient-to-br from-beach-dark/95 to-[#11151d] hover:border-zinc-600 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(0,0,0,0.28)]"
       }`}
       onPointerDown={(e) => { pointerDownPos.current = { x: e.clientX, y: e.clientY }; }}
       onPointerUp={(e) => {
