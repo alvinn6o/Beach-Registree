@@ -7,7 +7,6 @@ import { useCourseStore } from "@/stores/courseStore";
 import { validatePlan } from "graph-core";
 import type { ValidationError } from "graph-core";
 import SemesterColumn from "./SemesterColumn";
-import PlannerControls from "./PlannerControls";
 import AdvisorSummaryPanel from "./AdvisorSummaryPanel";
 import PlannerDetailsDeck from "./PlannerDetailsDeck";
 import CompletedSection from "./CompletedSection";
@@ -100,20 +99,17 @@ export default function SemesterPlanner({ onSelectCourse, selectedCourse }: Seme
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="border-b border-beach-border px-4 py-4">
-        <PlannerControls />
-        {lastActionError && (
-          <div className="mt-3 rounded-lg border border-red-500/20 bg-red-950/20 px-3 py-2 text-xs text-red-300">
-            {lastActionError}
-            <button
-              onClick={clearLastActionError}
-              className="ml-3 text-red-400/70 hover:text-red-300"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-      </div>
+      {lastActionError && (
+        <div className="mx-4 mt-3 rounded-lg border border-red-500/20 bg-red-950/20 px-3 py-2 text-xs text-red-300">
+          {lastActionError}
+          <button
+            onClick={clearLastActionError}
+            className="ml-3 text-red-400/70 hover:text-red-300"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       <DndContext
         sensors={sensors}

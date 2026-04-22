@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import TrackSelector from "@/components/graph/TrackSelector";
+import PlannerControls from "@/components/planner/PlannerControls";
 import ProgressBar from "@/components/shared/ProgressBar";
 import ViewModeToggle from "@/components/shared/ViewModeToggle";
 import TransferToggle from "@/components/shared/TransferToggle";
@@ -114,6 +115,12 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
           </div>
         </div>
       </div>
+
+      {activePage === "planner" && (
+        <div className="border-t border-beach-border/60 bg-beach-dark/30 px-4 py-2">
+          <PlannerControls />
+        </div>
+      )}
 
       {showSetup && (
         <div className="border-t border-beach-border/60 px-4 py-3">
