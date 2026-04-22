@@ -113,7 +113,6 @@ export default function AdvisorSummaryPanel() {
               {STATUS_LABELS[status]}
             </span>
           </div>
-          <p className="mt-2 text-sm text-zinc-300">{reportValue.summary}</p>
         </div>
 
         <button

@@ -5,7 +5,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import TrackSelector from "@/components/graph/TrackSelector";
 import PlannerControls from "@/components/planner/PlannerControls";
-import ProgressBar from "@/components/shared/ProgressBar";
 import ViewModeToggle from "@/components/shared/ViewModeToggle";
 import TransferToggle from "@/components/shared/TransferToggle";
 import QuickSelect from "@/components/shared/QuickSelect";
@@ -68,9 +67,6 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="hidden xl:block rounded-xl border border-beach-border/70 bg-beach-card/60 px-3 py-2">
-            <ProgressBar />
-          </div>
           {extraControls}
           <button
             onClick={() => setShowReview(true)}
@@ -134,14 +130,9 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
 
             <div className="rounded-2xl border border-beach-border/70 bg-beach-card/40 px-3 py-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-600">
-                    Reset & Progress
-                  </p>
-                  <div className="mt-2 xl:hidden">
-                    <ProgressBar />
-                  </div>
-                </div>
+                <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-600">
+                  Reset & Progress
+                </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <SelectionActions />
                   <DevTools />

@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useSavedPlansStore } from "@/stores/savedPlansStore";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { useProgressStore } from "@/stores/progressStore";
-import PlanComparisonPanel from "./PlanComparisonPanel";
 
 interface SavedPlansPanelProps {
   onClose: () => void;
@@ -17,7 +16,6 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
   const loadPlan = useSavedPlansStore((s) => s.loadPlan);
   const deletePlan = useSavedPlansStore((s) => s.deletePlan);
   const renamePlan = useSavedPlansStore((s) => s.renamePlan);
-  const updatePlanNotes = useSavedPlansStore((s) => s.updatePlanNotes);
 
   const plan = usePlannerStore((s) => s.plan);
   const setPlan = usePlannerStore((s) => s.setPlan);
@@ -29,13 +27,9 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
   const setSelectedTrack = useProgressStore((s) => s.setSelectedTrack);
 
   const [newPlanName, setNewPlanName] = useState("");
-  const [newPlanNotes, setNewPlanNotes] = useState("");
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
-  const [editingNotesValue, setEditingNotesValue] = useState("");
-  const [comparePlanId, setComparePlanId] = useState<string>("");
 
   const sortedPlans = Object.values(savedPlans).sort(
     (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
@@ -44,9 +38,8 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
   function handleSave() {
     if (!plan) return;
     const name = newPlanName.trim() || `Plan ${sortedPlans.length + 1}`;
-    savePlan(name, plan, [...completed], selectedElectives, selectedTrack, newPlanNotes);
+    savePlan(name, plan, [...completed], selectedElectives, selectedTrack, "");
     setNewPlanName("");
-    setNewPlanNotes("");
   }
 
   function handleLoad(id: string) {
@@ -77,11 +70,6 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
       minute: "2-digit",
     });
   }
-
-  const comparePlan = useMemo(
-    () => (comparePlanId ? savedPlans[comparePlanId] ?? null : null),
-    [comparePlanId, savedPlans]
-  );
 
   return (
     <div className="w-80 bg-beach-card border-l border-beach-border h-full flex flex-col">
@@ -116,47 +104,13 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
             Save
           </button>
         </div>
-        <textarea
-          value={newPlanNotes}
-          onChange={(e) => setNewPlanNotes(e.target.value)}
-          placeholder="Optional scenario note: Balanced workload, faster graduation, transfer catch-up..."
-          className="mt-2 w-full resize-none bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-blue-500"
-          rows={2}
-        />
         {!plan && (
           <p className="text-xs text-zinc-600 mt-1.5 font-mono">Generate a plan first</p>
         )}
       </div>
 
-      {plan && sortedPlans.length > 0 && (
-        <div className="p-4 border-b border-beach-border">
-          <p className="text-xs text-zinc-500 mb-2 font-mono">Compare current plan with:</p>
-          <select
-            value={comparePlanId}
-            onChange={(e) => setComparePlanId(e.target.value)}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500"
-          >
-            <option value="">Select saved scenario</option>
-            {sortedPlans.map((saved) => (
-              <option key={saved.id} value={saved.id}>
-                {saved.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
       {/* Plans list */}
       <div className="flex-1 overflow-y-auto">
-        {plan && comparePlan && (
-          <PlanComparisonPanel
-            currentPlan={plan}
-            currentCompleted={[...completed]}
-            currentSelectedElectives={selectedElectives}
-            currentSelectedTrack={selectedTrack}
-            comparePlan={comparePlan}
-          />
-        )}
         {sortedPlans.length === 0 ? (
           <div className="p-6 text-center">
             <p className="text-zinc-600 text-sm font-mono">No saved plans yet.</p>
@@ -223,49 +177,6 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
                     {semCount} semesters · {totalCourses} courses · {formatDate(saved.savedAt)}
                   </p>
 
-                  {editingNotesId === saved.id ? (
-                    <div className="mb-3">
-                      <textarea
-                        autoFocus
-                        value={editingNotesValue}
-                        onChange={(e) => setEditingNotesValue(e.target.value)}
-                        className="w-full resize-none bg-zinc-800 border border-zinc-600 rounded px-2 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500"
-                        rows={3}
-                      />
-                      <div className="mt-2 flex gap-2">
-                        <button
-                          onClick={() => {
-                            updatePlanNotes(saved.id, editingNotesValue);
-                            setEditingNotesId(null);
-                            setEditingNotesValue("");
-                          }}
-                          className="px-2 py-1 bg-blue-600 text-white rounded text-xs"
-                        >
-                          Save Note
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingNotesId(null);
-                            setEditingNotesValue("");
-                          }}
-                          className="px-2 py-1 bg-zinc-700 text-zinc-300 rounded text-xs"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setEditingNotesId(saved.id);
-                        setEditingNotesValue(saved.notes ?? "");
-                      }}
-                      className="mb-3 text-left w-full rounded-lg border border-beach-border/70 px-2.5 py-2 text-xs text-zinc-400 hover:text-zinc-300 transition-colors"
-                    >
-                      {saved.notes ? saved.notes : "Add scenario note"}
-                    </button>
-                  )}
-
                   {confirmDeleteId === saved.id ? (
                     <div className="flex gap-2">
                       <span className="text-xs text-zinc-400 flex-1">Delete this plan?</span>
@@ -289,12 +200,6 @@ export default function SavedPlansPanel({ onClose }: SavedPlansPanelProps) {
                         className="flex-1 py-1.5 bg-zinc-800 text-zinc-300 rounded text-xs font-medium hover:bg-zinc-700 border border-zinc-700 transition-colors"
                       >
                         Load
-                      </button>
-                      <button
-                        onClick={() => setComparePlanId(saved.id)}
-                        className="px-2.5 py-1.5 text-zinc-400 hover:text-blue-300 rounded text-xs border border-zinc-700 hover:border-blue-800 transition-colors"
-                      >
-                        Compare
                       </button>
                       <button
                         onClick={() => setConfirmDeleteId(saved.id)}
