@@ -29,7 +29,6 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({ activePage, extraControls }: AppHeaderProps) {
-  const [showSetup, setShowSetup] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const completed = useProgressStore((state) => state.completed);
   const selectedTrack = useProgressStore((state) => state.selectedTrack);
@@ -79,16 +78,6 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
           >
             Write a Review
           </button>
-          <button
-            onClick={() => setShowSetup((value) => !value)}
-            className={`rounded-xl border px-3 py-2 text-xs font-medium transition-all ${
-              showSetup
-                ? "border-zinc-500 bg-zinc-900 text-zinc-100"
-                : "border-beach-border text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
-            }`}
-          >
-            {showSetup ? "Hide Setup" : "Planning Setup"}
-          </button>
         </div>
       </div>
 
@@ -122,8 +111,7 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
         </div>
       )}
 
-      {showSetup && (
-        <div className="border-t border-beach-border/60 px-4 py-3">
+      <div className="border-t border-beach-border/60 px-4 py-3">
           <div className="grid gap-3 xl:grid-cols-[auto_auto_1fr]">
             <div className="rounded-2xl border border-beach-border/70 bg-beach-card/40 px-3 py-3">
               <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-600">
@@ -162,7 +150,6 @@ export default function AppHeader({ activePage, extraControls }: AppHeaderProps)
             </div>
           </div>
         </div>
-      )}
 
     </header>
     <ReviewModal open={showReview} onClose={() => setShowReview(false)} />
